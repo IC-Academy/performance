@@ -2,6 +2,8 @@
 
 Independent IC Admin adaptation of the Inter-Con EDD product foundation.
 
+Test domain: `performance.intercon.com.mx`
+
 ## Current status
 
 - IC Admin branding assets and interim hero artwork applied.
