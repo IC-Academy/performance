@@ -40,15 +40,16 @@
     // IC Admin remains isolated in demo mode until its own backend and data
     // environment are available. Never point this instance at the Mexico API.
     mode: 'demo',
+    demoCode: '000000', // Simulation only; never accepted in API mode.
 
     // Base de los webhooks de n8n. Sustituir por la URL real del entorno
     // cuando exista. No se usa en modo "demo".
-    apiBaseUrl: 'https://jmejiaromero.app.n8n.cloud/webhook',
+    apiBaseUrl: '', // Disconnected while local testing is enabled.
 
     // Clave usada en sessionStorage para guardar la sesión (token + usuario).
     // Ver auth.js. Se usa sessionStorage y no localStorage a propósito: el
     // token no debe sobrevivir a que el usuario cierre la pestaña/navegador.
-    sessionStorageKey: 'edd_ic_admin_session',
+    sessionStorageKey: 'edd_ic_admin_demo_session_v2',
 
     // Tiempo máximo (ms) que api.js espera una respuesta antes de abortar la
     // petición y mostrar "Error de conexión".
