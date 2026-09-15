@@ -18,7 +18,7 @@
   //
   // Ponderación acordada en demo del 11-08-2026: dos bloques 50/50.
   // Valores y Actitud aporta 50% del total. El bloque técnico-funcional +
-  // objetivos aporta el otro 50%. Hasta que RH confirme otro reparto interno,
+  // objetivos aporta el otro 50%. Hasta que DO confirme otro reparto interno,
   // se conserva la proporción previa B:C:D = 20:10:30 (2:1:3), escalada a 50%.
   //
   // Única fuente de verdad de los porcentajes: NO se deben hardcodear

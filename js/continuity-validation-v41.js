@@ -25,7 +25,7 @@
           message = lang === 'en' ? 'Select at least one recommended continuity action before submitting.' : 'Selecciona al menos una acción recomendada de continuidad antes de enviar.';
           target = block.querySelector('.leader-continuity-actions');
         } else if ((impact === 'Alto' || impact === 'Crítico' || replacement === 'Sin reemplazo identificado') && !(comment && comment.value.trim())) {
-          message = lang === 'en' ? 'Add a confidential HR comment for the selected impact or lack of replacement.' : 'Agrega un comentario confidencial para RH por el impacto seleccionado o la falta de reemplazo.';
+          message = lang === 'en' ? 'Add a confidential DO comment for the selected impact or lack of replacement.' : 'Agrega un comentario confidencial para DO por el impacto seleccionado o la falta de reemplazo.';
           target = comment;
         }
 

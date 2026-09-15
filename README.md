@@ -8,6 +8,8 @@ Test domain: `performance.intercon.com.mx`
 
 - IC Admin branding assets and interim hero artwork applied.
 - English is the default interface language.
+- Feedback closure includes a manual Outlook Calendar link; no calendar event is created or saved by EDD. Existing meeting confirmation, agreement capture, and signature gates remain unchanged.
+- Organizational Development (DO) replaces RH/HR in interface wording; existing data field identifiers are preserved.
 - The application is intentionally isolated in `demo` mode.
 - IC Admin uses separate browser storage and session keys.
 - Power BI and PayCom were added as interim role-dependent tools based on Sara's operational input.

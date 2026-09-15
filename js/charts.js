@@ -136,7 +136,7 @@
         const base = evaluacionLider[d.key];
         calibValores[d.key] = (base === null || base === undefined) ? null : Math.max(0, Math.min(5, base * factor));
       });
-      calibNota = 'La serie "Calibrado" es una proyección proporcional de la forma de la evaluación del líder (factor ' + factor.toFixed(2) + '×), porque la calibración de RH ajusta el resultado global y no cada sección de forma independiente. No representa respuestas individuales nuevas.';
+      calibNota = 'La serie "Calibrado" es una proyección proporcional de la forma de la evaluación del líder (factor ' + factor.toFixed(2) + '×), porque la calibración de DO ajusta el resultado global y no cada sección de forma independiente. No representa respuestas individuales nuevas.';
     }
 
     const svg = `<svg viewBox="0 0 ${size} ${size}" class="radar-svg" role="img" aria-label="Gráfico radar de competencias">

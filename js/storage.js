@@ -210,10 +210,10 @@
         ajuste,
         justificacion: 'Se ratifica el resultado de la evaluación del líder tras revisar evidencias y expediente administrativo.',
         resultadoCalibrado,
-        responsable: 'Administrador RH',
+        responsable: 'Administrador DO',
         actas: index % 4 === 0 ? 1 : 0,
         nom035: index % 3 === 0 ? 'Riesgo medio — seguimiento sugerido' : 'Riesgo bajo',
-        observacionesRH: 'Sin observaciones adicionales de RH para este periodo.',
+        observacionesRH: 'Sin observaciones adicionales de DO para este periodo.',
         fecha: fechaCalib,
         hora: '10:00',
         retroHabilitada: false,
@@ -223,8 +223,8 @@
           campo: 'resultadoCalibrado',
           valorAnterior: null,
           valorNuevo: resultadoCalibrado,
-          motivo: 'Calibración inicial de RH',
-          usuario: 'Administrador RH',
+          motivo: 'Calibración inicial de DO',
+          usuario: 'Administrador DO',
           fecha: fechaCalib,
           hora: '10:00'
         }]
@@ -237,7 +237,7 @@
 
       if (estado === 'retro_pendiente') {
         calibracion.retroHabilitada = true;
-        calibracion.historial.push({ campo: 'retroHabilitada', valorAnterior: false, valorNuevo: true, motivo: 'RH habilita fase de retroalimentación', usuario: 'Administrador RH', fecha: '2026-08-03', hora: '09:00' });
+        calibracion.historial.push({ campo: 'retroHabilitada', valorAnterior: false, valorNuevo: true, motivo: 'DO habilita fase de retroalimentación', usuario: 'Administrador DO', fecha: '2026-08-03', hora: '09:00' });
         if (nivelBajo) {
           db.areas_oportunidad.push({ id: nextId('AO'), colaboradorId: col.empleado, periodoId, area: 'Cumplimiento de objetivos y estándares de calidad', planMejora: 'Reforzar seguimiento semanal con su líder y revisar prioridades.' });
           db.planes_desarrollo.push({ id: nextId('PD'), colaboradorId: col.empleado, periodoId, competencia: 'Orientación a Resultados', accion: 'Sesiones quincenales de coaching con su líder inmediato.', responsable: col.liderId, fechaCompromiso: '2026-09-15', estado: 'No iniciada', evidencia: '', observaciones: '' });
@@ -249,7 +249,7 @@
         calibracion.retroHabilitada = true;
         calibracion.aceptacionColaborador = true;
         calibracion.fechaAceptacion = '2026-08-10';
-        calibracion.historial.push({ campo: 'retroHabilitada', valorAnterior: false, valorNuevo: true, motivo: 'RH habilita fase de retroalimentación', usuario: 'Administrador RH', fecha: '2026-08-03', hora: '09:00' });
+        calibracion.historial.push({ campo: 'retroHabilitada', valorAnterior: false, valorNuevo: true, motivo: 'DO habilita fase de retroalimentación', usuario: 'Administrador DO', fecha: '2026-08-03', hora: '09:00' });
         calibracion.historial.push({ campo: 'aceptacionColaborador', valorAnterior: false, valorNuevo: true, motivo: 'Colaborador revisó y aceptó su resultado', usuario: col.nombre, fecha: '2026-08-10', hora: '11:00' });
 
         db.areas_oportunidad.push({ id: nextId('AO'), colaboradorId: col.empleado, periodoId, area: nivelBajo ? 'Cumplimiento de objetivos y estándares de calidad' : 'Gestión del tiempo en proyectos de alta complejidad', planMejora: nivelBajo ? 'Plan de coaching quincenal y revisión de prioridades con su líder.' : 'Adoptar herramienta de planeación semanal y revisar avances con su líder.' });
@@ -504,7 +504,7 @@
   }
 
   function habilitarRetroalimentacion(colaboradorId, periodoId, usuario) {
-    return crearOActualizarCalibracion(colaboradorId, periodoId, { retroHabilitada: true, _motivo: 'RH habilita fase de retroalimentación' }, usuario);
+    return crearOActualizarCalibracion(colaboradorId, periodoId, { retroHabilitada: true, _motivo: 'DO habilita fase de retroalimentación' }, usuario);
   }
 
   function aceptarResultado(colaboradorId, periodoId, usuario) {
