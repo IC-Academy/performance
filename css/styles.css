@@ -887,7 +887,7 @@ body{background:linear-gradient(180deg,#f8fbff 0,#f2f7fc 100%);color:var(--premi
   min-height:340px;
   background:
     linear-gradient(90deg,rgba(4,31,68,.05),rgba(4,31,68,.12)),
-    url('../assets/ic-admin-hero.jpg') center 60% / cover no-repeat;
+    url('../assets/ic-admin-welcome.jpg') center top / cover no-repeat;
 }
 .welcome-hero-art:before{display:none;}
 .welcome-building{display:none!important;}
