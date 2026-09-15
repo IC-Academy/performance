@@ -789,7 +789,67 @@
   "Riesgo Bajo": "Low risk",
   "Riesgo Medio": "Medium risk",
   "Riesgo Alto": "High risk",
-  "Riesgo Crítico": "Critical risk"
+  "Riesgo Crítico": "Critical risk",
+  "Retroalimentaciones firmadas": "Signed feedback reviews",
+  "Desarrollo Organizacional": "Organizational Development",
+  "Sol": "Sun", "Semilla": "Seed", "Sembrando": "Sowing",
+  "Cosecha": "Harvest", "En Maceta": "Potted", "Agua": "Water", "Corazón": "Heart",
+  "FIRMAS": "SIGNATURES",
+  "Pendiente": "Pending",
+  "Evaluación de Desempeño 2026": "Performance Evaluation 2026",
+  "Motivo:": "Reason:", "Contexto:": "Context:",
+  "Comentario del líder": "Manager comment",
+  "Confirma el contexto o explica por qué no se definieron objetivos para este puesto.": "Confirm the context or explain why no goals were defined for this role.",
+  "Capacidades, conductas y resultados que conviene mantener y potenciar.": "Capabilities, behaviors, and results to maintain and strengthen.",
+  "Espacios concretos donde puede crecer, aprender o ampliar su impacto.": "Specific opportunities to grow, learn, or increase their impact.",
+  "Conocimientos, hábitos o resultados que hoy limitan su desempeño esperado.": "Knowledge gaps, habits, or results currently limiting expected performance.",
+  "Ej. Mantiene alta calidad en sus entregables y apoya al equipo en cierres críticos.": "e.g. Maintains high-quality deliverables and supports the team during critical deadlines.",
+  "Ej. Fortalecer planeación semanal y desarrollar mayor dominio de Power BI.": "e.g. Strengthen weekly planning and develop greater proficiency in Power BI.",
+  "Ej. Presenta retrasos recurrentes en seguimiento y requiere mayor precisión en reportes.": "e.g. Repeated follow-up delays and a need for more accurate reporting.",
+  "Ej. Dependencia de una sola persona/proceso, carga acumulada o falta de capacitación específica.": "e.g. Dependency on one person or process, accumulated workload, or insufficient specialized training.",
+  "Ej. Durante el periodo destacaste por..., y el principal foco de desarrollo será...": "e.g. During this period you stood out for..., and your main development focus will be...",
+  "ACUERDOS": "AGREEMENTS", "DESARROLLO": "DEVELOPMENT",
+  "Agregar": "Add", "Guardar acuerdo": "Save agreement",
+  "Documenta el punto a desarrollar y la acción acordada con el colaborador.": "Document the development opportunity and the action agreed with the employee.",
+  "Describe con claridad el aspecto que se trabajará": "Clearly describe the development opportunity",
+  "Describe la acción acordada para mejorar": "Describe the agreed improvement action",
+  "Diferencia global": "Overall difference", "Brecha general:": "Overall gap:",
+  "LECTURA MULTIDIMENSIONAL": "MULTIDIMENSIONAL VIEW",
+  "Perfil de desempeño vs. ideal": "Performance profile vs. ideal",
+  "La rueda muestra dónde están alineados colaborador y líder, y en qué dimensiones ambos siguen lejos del estándar esperado.": "The chart shows where the employee and manager are aligned and which dimensions remain below the expected standard.",
+  "Valores y actitud": "Values and attitude", "Técnica funcional": "Technical-functional performance",
+  "/5 líder": "/5 manager", "Cómo leer este perfil": "How to read this profile",
+  "La distancia al borde indica qué tan cerca está cada competencia del nivel ideal. La separación entre azul y naranja muestra la diferencia de percepción entre colaborador y líder.": "Distance from the outer edge indicates how close each competency is to the ideal level. The gap between blue and orange shows the difference between employee and manager ratings.",
+  "Ideal esperado 5/5": "Expected ideal 5/5",
+  "Ver resumen ejecutivo de 3 dimensiones": "View the three-dimension executive summary",
+  "MADUREZ DE OBJETIVOS": "GOAL-SETTING MATURITY",
+  "Validación de ausencia de objetivos": "Validation of absent goals",
+  "Colaborador: N/A — sin objetivos definidos": "Employee: N/A — no defined goals",
+  "Líder: confirma ausencia de objetivos": "Manager: confirms no goals were defined",
+  "Líder: reporta que sí existían objetivos": "Manager: reports goals did exist",
+  "Motivo del colaborador:": "Employee reason:", "Contexto del líder:": "Manager context:",
+  "C. Cumplimiento de Objetivos (promedio)": "C. Goal Achievement (average)",
+  "MATRIZ DE TALENTO": "TALENT MATRIX", "Matriz 9-Box de Talento": "9-Box Talent Matrix",
+  "Ubicación según el equilibrio entre desempeño y actitud.": "Placement based on the balance between performance and attitude.",
+  "Ubicación actual": "Current placement", "Lectura del cuadrante": "Quadrant overview",
+  "Descripción": "Description", "Enfoque sugerido": "Suggested focus", "Perfil actual": "Current profile",
+  "VALORES / ACTITUD": "VALUES / ATTITUDE",
+  "Buena actitud y desempeño promedio; buen potencial de crecimiento.": "Positive attitude and average performance; good growth potential.",
+  "Por encima del promedio; tiene capacidad y actitud.": "Above average; demonstrates capability and a positive attitude.",
+  "Trabajo positivo, pero resultados aún por debajo del estándar.": "Positive contribution, but results remain below standard.",
+  "Actitud negativa, pero desempeño superior al promedio.": "Negative attitude, but above-average performance.",
+  "La matriz es una referencia para revisión humana; no sustituye el criterio de Desarrollo Organizacional ni del líder.": "The matrix supports human review; it does not replace the judgment of DO or the manager.",
+  "Seguimiento en el próximo periodo": "Follow up in the next period",
+  "Revisión en 1 mes": "Review in one month", "Revisión en 3 meses": "Review in three months",
+  "Coaching cada 3 meses": "Coaching every three months", "Plan de crecimiento": "Growth plan",
+  "Plan de actitud en el corto plazo": "Short-term attitude improvement plan",
+  "Plan de crecimiento en el corto plazo": "Short-term growth plan", "Promoción inmediata": "Immediate promotion",
+  "La calibración y liberación de retroalimentación las gestiona el administrador de DO.": "The DO administrator manages calibration and feedback release.",
+  "Compromiso Organizacional": "Organizational Commitment",
+  "Actitud de Servicio": "Service Mindset", "Trabajo en Equipo": "Teamwork",
+  "Comunicación Efectiva": "Effective Communication", "Adaptabilidad e Iniciativa": "Adaptability and Initiative",
+  "Procesos y Herramientas": "Processes and Tools", "Orientación a Resultados": "Results Orientation",
+  "Planeación y Organización": "Planning and Organization", "Seguimiento y Control": "Follow-up and Control"
 }));
 
   // -------------------------------------------------------------------
@@ -858,6 +918,23 @@
     const hit = DICT.get(core);
     if (hit !== undefined) return leading + hit + trailing;
 
+    const normalizedHit = DICT.get(core.replace(/\s+/g, ' '));
+    if (normalizedHit !== undefined) return leading + normalizedHit + trailing;
+    const evaluationTitle = core.match(/^Evaluación de (.+)$/);
+    if (evaluationTitle) return leading + `Evaluation of ${evaluationTitle[1]}` + trailing;
+    const comparisonTitle = core.match(/^Comparación — (.+)$/);
+    if (comparisonTitle) return leading + `Comparison — ${comparisonTitle[1]}` + trailing;
+    const tenure = core.match(/^(\d+) años? (\d+) meses?$/);
+    if (tenure) return leading + `${tenure[1]} year${tenure[1] === '1' ? '' : 's'} ${tenure[2]} month${tenure[2] === '1' ? '' : 's'}` + trailing;
+    const idealGap = core.match(/^(\d+(?:\.\d+)?) pts al ideal$/);
+    if (idealGap) return leading + `${idealGap[1]} pts below ideal` + trailing;
+    const perceptionGap = core.match(/^([+-]?\d+(?:\.\d+)?) (auto vs líder|percepción)$/);
+    if (perceptionGap) return leading + `${perceptionGap[1]} ${perceptionGap[2] === 'percepción' ? 'rating gap' : 'self vs manager'}` + trailing;
+    const managerIdeal = core.match(/^Líder (\d+(?:\.\d+)?)\/5 · Ideal (\d+(?:\.\d+)?)\/5$/);
+    if (managerIdeal) return leading + `Manager ${managerIdeal[1]}/5 · Ideal ${managerIdeal[2]}/5` + trailing;
+    const quadrantName = core.match(/^(\d) · (Sol|Semilla|Sembrando|Cosecha|En Maceta|Agua|Corazón|Black Spot|Green Spot)$/);
+    if (quadrantName) return leading + `${quadrantName[1]} · ${DICT.get(quadrantName[2]) || quadrantName[2]}` + trailing;
+
     // Match complete UI labels surrounded by decorative icons, not words
     // inside arbitrary sentences or employee-entered content.
     const decorated = core.match(/^([→←✓×+⌂◇🔒✉\s]*)(.*?)([→←✓\s]*)$/u);
@@ -868,7 +945,7 @@
     if (greeting) return leading + `Hello, ${greeting[1]}!` + trailing;
     const example = core.match(/^Ej\. (\d+(?:[.,]\d+)?)$/);
     if (example) return leading + `e.g. ${example[1]}` + trailing;
-    const rolePeriod = core.match(/^(Colaborador|Líder|Administrador) · Evaluación de Desempeño(?: (\d{4}))?$/);
+    const rolePeriod = core.match(/^(Colaborador|Líder|Administrador)\s*·\s*Evaluación de Desempeño(?: (\d{4}))?$/);
     if (rolePeriod) return leading + `${({Colaborador:'Employee',Líder:'Manager',Administrador:'Administrator'})[rolePeriod[1]]} · Performance Evaluation${rolePeriod[2] ? ' ' + rolePeriod[2] : ''}` + trailing;
     const sectionNumber = core.match(/^Sección (\d+) de (\d+)$/);
     if (sectionNumber) return leading + `Section ${sectionNumber[1]} of ${sectionNumber[2]}` + trailing;
@@ -896,7 +973,7 @@
     const leaderSection = core.match(/^(Mi equipo|Pendientes por evaluar|Pendientes por firmar)\s+—\s+(.+)$/);
     if (leaderSection) {
       const sectionLabel = DICT.get(leaderSection[1]) || leaderSection[1];
-      return leading + `${sectionLabel} — ${leaderSection[2]}` + trailing;
+      return leading + `${sectionLabel} — ${DICT.get(leaderSection[2]) || leaderSection[2]}` + trailing;
     }
     const agreementsToSign = core.match(/^Tienes (\d+) acuerdos? por firmar$/);
     if (agreementsToSign) {

@@ -382,7 +382,9 @@
       const labelR=maxR+47; const angle=p[2];
       const lx=center+labelR*Math.cos(angle), ly=center+labelR*Math.sin(angle);
       const anchor=Math.abs(Math.cos(angle))<.2?'middle':(Math.cos(angle)>0?'start':'end');
-      const label=String(d.shortLabel || d.label || '').trim();
+      const sourceLabel=String(d.shortLabel || d.label || '').trim();
+      // Translate the complete label BEFORE line wrapping into SVG tspans.
+      const label=global.EDDI18N ? global.EDDI18N.translateText(sourceLabel) : sourceLabel;
       const words=label.split(/\s+/).filter(Boolean);
       const lines=[]; let current='';
       words.forEach((word)=>{
