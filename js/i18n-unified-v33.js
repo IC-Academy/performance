@@ -37,6 +37,52 @@
   // unicamente -- nunca reemplazo de subcadena o palabra suelta dentro de
   // una oracion mas larga (eso es lo que causaba el Spanglish).
   const DICT = new Map(Object.entries({
+  "15 a 20": "15 to 20",
+  "Continuar mi evaluación": "Continue my evaluation",
+  "Comprendo lo que dice": "I understand the instructions",
+  "Selecciona un motivo": "Select a reason",
+  "Resumen y envío": "Review and submit",
+  "Sección interna": "Internal section",
+  "Revisión final": "Final review",
+  "Peso de la sección:": "Section weight:",
+  "Sin responder": "Not answered",
+  "Motivo pendiente": "Reason pending",
+  "Sin contexto registrado": "No context recorded",
+  "No se registraron objetivos.": "No goals recorded.",
+  "Confirma que comprendiste la guía superior para habilitar la captura.": "Confirm that you understand the guide above to enable goal entry.",
+  "minutos": "minutes",
+  "Valores y Actitud 40%": "Values and Attitude 40%",
+  "Técnica Funcional 60%": "Technical-functional Performance 60%",
+  "Conocimientos y Habilidades Técnicas": "Technical Knowledge and Skills",
+  "B. Conocimientos y Habilidades Técnicas": "B. Technical Knowledge and Skills",
+  "B. Conocimientos y Habilidades Técnicas del Puesto": "B. Role-specific Technical Knowledge and Skills",
+  "C. Cumplimiento de Objetivos": "C. Goal Achievement",
+  "Puedes guardar tu progreso en cualquier momento. Tu evaluación es confidencial.": "You can save your progress at any time. Your evaluation is confidential.",
+  "Registra hasta cinco objetivos. Captura qué meta se acordó y cuál fue el resultado final. El porcentaje y la calificación se calculan automáticamente.": "Enter up to five goals. Record the agreed target and final achieved result. The achievement percentage and rating are calculated automatically.",
+  "CUMPLIMIENTO DE OBJETIVOS · 30%": "GOAL ACHIEVEMENT · 30%",
+  "Captura tus objetivos": "Enter your goals",
+  "= lo que debías lograr ·": "= what you were expected to achieve ·",
+  "= lo que realmente lograste. El sistema calcula el cumplimiento y la calificación.": "= what you actually achieved. The system calculates achievement and the rating.",
+  "110% o más": "110% or more",
+  "No tuve objetivos definidos en este periodo": "I had no defined goals during this period",
+  "Esta opción existe porque este primer ciclo también busca detectar puestos o equipos que operaron sin objetivos formales. No se registra como cero.": "This first cycle also identifies roles or teams that operated without formal goals. This is not recorded as zero.",
+  "Sección marcada como N/A": "Section marked as N/A",
+  "La ausencia de objetivos se registrará como un dato de madurez de gestión y deberá ser validada por tu líder.": "The absence of goals is recorded as a management maturity indicator and must be validated by your manager.",
+  "Motivo principal": "Main reason",
+  "Contexto breve": "Brief context",
+  "No se definieron objetivos formales para mi puesto": "No formal goals were defined for my role",
+  "Ingresé después del periodo de definición": "I joined after the goal-setting period",
+  "Mi función operó sin metas documentadas": "My role operated without documented targets",
+  "Explica brevemente por qué no tuviste objetivos definidos durante el periodo.": "Briefly explain why you had no defined goals during this period.",
+  "Describe el objetivo acordado para el periodo": "Describe the goal agreed for the period",
+  "Se calcula automáticamente": "Calculated automatically",
+  "Sin cálculo": "Not calculated",
+  "Completa objetivo, meta, resultado y porcentaje de cumplimiento.": "Complete the goal, target, achieved result, and achievement percentage.",
+  "N/A — Sin objetivos definidos en este periodo": "N/A — No goals defined during this period",
+  "Ir al inicio": "Go to home",
+  "Tu compromiso impulsa tu desarrollo y el éxito de Inter-Con.": "Your commitment supports your growth and Inter-Con’s success.",
+  "Evalúa el dominio técnico del puesto, el uso de procesos y herramientas del área y la forma en que el colaborador organiza y controla su trabajo.": "Evaluate role-specific technical mastery, use of team processes and tools, and how the employee organizes and manages their work.",
+  "Registra hasta cinco objetivos acordados al inicio del periodo, con su meta o indicador, resultado alcanzado, porcentaje de cumplimiento y calificación.": "Enter up to five goals agreed at the start of the period, including the target or indicator, achieved result, achievement percentage, and rating.",
   "Agendar reunión en Outlook": "Schedule meeting in Outlook",
   "Se abrirá el calendario de Outlook en otra pestaña. Agenda la reunión e invita al colaborador manualmente. EDD no guarda el evento; después confirma aquí que tuvieron la reunión y documenta los acuerdos.": "Outlook Calendar opens in a new tab. Schedule the meeting and invite the employee manually. EDD does not save the event; afterward, confirm the meeting here and document the agreements.",
   "Inicio": "Home",
@@ -811,6 +857,21 @@
     if (!core) return raw;
     const hit = DICT.get(core);
     if (hit !== undefined) return leading + hit + trailing;
+
+    // Match complete UI labels surrounded by decorative icons, not words
+    // inside arbitrary sentences or employee-entered content.
+    const decorated = core.match(/^([→←✓×+⌂◇🔒✉\s]*)(.*?)([→←✓\s]*)$/u);
+    if (decorated && DICT.has(decorated[2])) {
+      return leading + decorated[1] + DICT.get(decorated[2]) + decorated[3] + trailing;
+    }
+    const greeting = core.match(/^¡?Hola, (.+?)(?:!)?$/);
+    if (greeting) return leading + `Hello, ${greeting[1]}!` + trailing;
+    const example = core.match(/^Ej\. (\d+(?:[.,]\d+)?)$/);
+    if (example) return leading + `e.g. ${example[1]}` + trailing;
+    const rolePeriod = core.match(/^(Colaborador|Líder|Administrador) · Evaluación de Desempeño(?: (\d{4}))?$/);
+    if (rolePeriod) return leading + `${({Colaborador:'Employee',Líder:'Manager',Administrador:'Administrator'})[rolePeriod[1]]} · Performance Evaluation${rolePeriod[2] ? ' ' + rolePeriod[2] : ''}` + trailing;
+    const sectionNumber = core.match(/^Sección (\d+) de (\d+)$/);
+    if (sectionNumber) return leading + `Section ${sectionNumber[1]} of ${sectionNumber[2]}` + trailing;
 
     // Explicit full-message patterns for values that contain runtime data.
     // These patterns translate the whole sentence, never isolated words.
