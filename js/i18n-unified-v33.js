@@ -849,7 +849,20 @@
   "Actitud de Servicio": "Service Mindset", "Trabajo en Equipo": "Teamwork",
   "Comunicación Efectiva": "Effective Communication", "Adaptabilidad e Iniciativa": "Adaptability and Initiative",
   "Procesos y Herramientas": "Processes and Tools", "Orientación a Resultados": "Results Orientation",
-  "Planeación y Organización": "Planning and Organization", "Seguimiento y Control": "Follow-up and Control"
+  "Planeación y Organización": "Planning and Organization", "Seguimiento y Control": "Follow-up and Control",
+  "Ver detalle": "View details",
+  "Enviar notificación": "Send notification",
+  "Revisar": "Review",
+  "Sin alertas activas": "No active alerts",
+  "Referencia de talento basada en los resultados de desempeño y actitud de la evaluación del líder.": "Talent reference based on the manager evaluation results for performance and attitude.",
+  "CONTEXTO DEL LÍDER": "MANAGER CONTEXT",
+  "Retroalimentación y acciones propuestas": "Feedback and proposed actions",
+  "Sin registrar.": "Not recorded.",
+  "Sin comentarios.": "No comments recorded.",
+  "Sin áreas registradas.": "No development opportunities recorded.",
+  "Justificación obligatoria cuando exista ajuste": "Justification required when an adjustment is made",
+  "ÚLTIMO CAMBIO": "LATEST CHANGE",
+  "Resumen de trazabilidad": "Change history summary"
 }));
 
   // -------------------------------------------------------------------
@@ -932,6 +945,8 @@
     if (perceptionGap) return leading + `${perceptionGap[1]} ${perceptionGap[2] === 'percepción' ? 'rating gap' : 'self vs manager'}` + trailing;
     const managerIdeal = core.match(/^Líder (\d+(?:\.\d+)?)\/5 · Ideal (\d+(?:\.\d+)?)\/5$/);
     if (managerIdeal) return leading + `Manager ${managerIdeal[1]}/5 · Ideal ${managerIdeal[2]}/5` + trailing;
+    const areaLeader = core.match(/^(.+?) · Líder: (.+)$/);
+    if (areaLeader) return leading + `${DICT.get(areaLeader[1]) || areaLeader[1]} · Manager: ${areaLeader[2]}` + trailing;
     const quadrantName = core.match(/^(\d) · (Sol|Semilla|Sembrando|Cosecha|En Maceta|Agua|Corazón|Black Spot|Green Spot)$/);
     if (quadrantName) return leading + `${quadrantName[1]} · ${DICT.get(quadrantName[2]) || quadrantName[2]}` + trailing;
 

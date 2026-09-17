@@ -61,3 +61,21 @@ test('manager screenshots: headings, placeholders and runtime values', () => {
     'Ej. Durante el periodo destacaste por..., y el principal foco de desarrollo será...'
   ]) assert.match(t(source), /^e\.g\./);
 });
+test('DO dashboard and calibration screenshots contain English system copy', () => {
+  const t = translator();
+  const cases = {
+    'Ver detalle →': 'View details →',
+    'Enviar notificación': 'Send notification',
+    'Desarrollo Organizacional · Líder: Demo Manager 20001': 'Organizational Development · Manager: Demo Manager 20001',
+    'Referencia de talento basada en los resultados de desempeño y actitud de la evaluación del líder.': 'Talent reference based on the manager evaluation results for performance and attitude.',
+    'CONTEXTO DEL LÍDER': 'MANAGER CONTEXT',
+    'Retroalimentación y acciones propuestas': 'Feedback and proposed actions',
+    'Sin registrar.': 'Not recorded.',
+    'Sin comentarios.': 'No comments recorded.',
+    'Sin áreas registradas.': 'No development opportunities recorded.',
+    'Justificación obligatoria cuando exista ajuste': 'Justification required when an adjustment is made',
+    'ÚLTIMO CAMBIO': 'LATEST CHANGE',
+    'Resumen de trazabilidad': 'Change history summary'
+  };
+  for (const [source, expected] of Object.entries(cases)) assert.equal(t(source), expected, source);
+});
