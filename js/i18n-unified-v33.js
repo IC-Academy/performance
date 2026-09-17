@@ -862,7 +862,16 @@
   "Sin áreas registradas.": "No development opportunities recorded.",
   "Justificación obligatoria cuando exista ajuste": "Justification required when an adjustment is made",
   "ÚLTIMO CAMBIO": "LATEST CHANGE",
-  "Resumen de trazabilidad": "Change history summary"
+  "Resumen de trazabilidad": "Change history summary",
+  "Confirma que la información es correcta antes de enviar.": "Confirm that the information is correct before submitting.",
+  "Registra al menos un objetivo o marca que no tienes objetivos aplicables antes de enviar.": "Add at least one goal or indicate that you have no applicable goals before submitting.",
+  "Confirma que la evaluación está completa antes de enviar.": "Confirm that the evaluation is complete before submitting.",
+  "La justificación es obligatoria cuando existe un ajuste distinto de 0.": "A justification is required when the adjustment is not 0.",
+  "Calibración guardada.": "Calibration saved.",
+  "Guarda la calibración antes de habilitar la retroalimentación.": "Save the calibration before enabling feedback.",
+  "El resultado es menor a 80. Registra al menos un plan de desarrollo antes de habilitar la retroalimentación.": "The result is below 80. Add at least one development plan before enabling feedback.",
+  "Retroalimentación habilitada. El colaborador podrá continuar cuando reciba la notificación correspondiente.": "Feedback enabled. The employee can continue once they receive the corresponding notification.",
+  "Verifica que \"Alineada\" sea menor que \"Revisar\".": "Verify that \"Aligned\" is less than \"Review\"."
 }));
 
   // -------------------------------------------------------------------
