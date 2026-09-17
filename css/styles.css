@@ -1609,3 +1609,17 @@ body.edd-request-active::before {
   .profile-selector-foot{padding:18px 24px;align-items:flex-start;flex-direction:column}
   .profile-selector-brand{padding:20px 24px}
 }
+
+/* Login artwork: keep the baked-in IC Admin mark fully visible.
+   The portrait artwork is slightly wider than the desktop panel, so a
+   centered `cover` crop cuts both sides of the mark. Anchoring it to the
+   left moves the harmless crop to the far-right edge. The kicker remains
+   in the layout for spacing, but is hidden because it duplicates the mark. */
+@media(min-width:901px){
+  .premium-login-brand-panel{
+    background-position:left center!important;
+  }
+  .premium-login-kicker{
+    visibility:hidden;
+  }
+}
