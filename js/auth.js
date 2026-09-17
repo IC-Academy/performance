@@ -145,6 +145,9 @@
       throw new global.EDDApi.ApiError('invalid_code', 'El código capturado no es válido.');
     }
     const detalle = detalleUsuarioDemo(u);
+    const isAdmin = global.EDDData.ADMINISTRADORES.some((person) => person.empleado === numeroEmpleado);
+    const canEvaluate = global.EDDData.LIDERES.some((person) => person.empleado === numeroEmpleado);
+    const canSelfEvaluate = global.EDDData.COLABORADORES.some((person) => person.empleado === numeroEmpleado);
     const expiresIn = cfg().defaultSessionSeconds;
     const session = {
       token: generarTokenDemo(),
@@ -154,7 +157,8 @@
         nombreCompleto: u.nombre,
         rol: ROL_INTERNO_A_API[u.perfil] || u.perfil,
         puesto: detalle.puesto,
-        area: detalle.area
+        area: detalle.area,
+        capabilities: { isAdmin, canEvaluate, canSelfEvaluate }
       }
     };
     guardarSesion(session);
@@ -241,6 +245,14 @@
       canEvaluate: rawCaps.canEvaluate === true || rawCaps.canEvaluateTeam === true || rawCaps.canLead === true || rawCaps.isLeader === true,
       canSelfEvaluate: rawCaps.canSelfEvaluate === true || rawCaps.canSelfAssess === true || rawCaps.canSelfEvaluation === true || rawCaps.requiresEvaluation === true
     });
+    // Upgrade demo sessions created before accumulated profiles were added.
+    // API sessions remain governed exclusively by /auth/me capabilities.
+    if (cfg().mode === 'demo') {
+      const employeeId = String(session.user.numeroEmpleado || '');
+      caps.isAdmin = global.EDDData.ADMINISTRADORES.some((person) => person.empleado === employeeId);
+      caps.canEvaluate = global.EDDData.LIDERES.some((person) => person.empleado === employeeId);
+      caps.canSelfEvaluate = global.EDDData.COLABORADORES.some((person) => person.empleado === employeeId);
+    }
     const rolNormalizado = String(session.user.rol || '').toLowerCase();
     const perfil = caps.isAdmin ? 'administrador' : (caps.canEvaluate ? 'lider' : (ROL_API_A_INTERNO[rolNormalizado] || rolNormalizado || 'colaborador'));
     if (perfil === 'administrador') caps.isAdmin = true;

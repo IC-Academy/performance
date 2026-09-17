@@ -20,26 +20,54 @@
     person.registroPrueba = true;
   });
 
+  // Managers also participate as employees in the performance cycle. These
+  // local-only employee records enable their own self-assessment without
+  // changing the team they manage or any production/API data.
+  data.LIDERES.filter(function (person) {
+    return person.empleado === '20001' || person.empleado === '20002';
+  }).forEach(function (manager) {
+    if (data.COLABORADORES.some(function (person) { return person.empleado === manager.empleado; })) return;
+    data.COLABORADORES.push({
+      empleado: manager.empleado,
+      nombre: manager.nombre,
+      puesto: manager.puesto,
+      area: manager.area,
+      ciudad: manager.ciudad || '',
+      direccion: 'IC Admin',
+      liderId: null,
+      antiguedad: 'Demo',
+      estadoDemo: 'no_iniciada',
+      correoCorporativo: manager.correoCorporativo,
+      estatusEmpleado: 'Activo',
+      correoValidado: true,
+      ultimaActualizacion: '2026-09-17',
+      registroPrueba: true
+    });
+  });
+
   global.document.addEventListener('DOMContentLoaded', function () {
     const doc = global.document;
     const root = doc.getElementById('app-root');
     if (!root || !global.App || global.APP_CONFIG.mode !== 'demo') return;
     const banner = doc.createElement('aside');
     banner.className = 'demo-local-banner';
-    banner.innerHTML = '<strong>LOCAL DEMO · Simulated data</strong><span>No backend, real OTP or email delivery. Changes stay in this browser. Do not enter real employee information.</span><button class="btn btn-outline btn-sm" type="button">Reset local demo</button>';
+    banner.innerHTML = '<strong>LOCAL DEMO · Simulated data</strong><span>No backend, real OTP or email delivery. Changes stay in this browser. Do not enter real employee information.</span><div class="demo-role-shortcuts"><button type="button" data-demo-user="10001">Employee</button><button type="button" data-demo-user="20001">Manager</button><button type="button" data-demo-user="90001">DO Admin</button></div><button class="btn btn-outline btn-sm demo-reset" type="button">Reset local demo</button>';
     root.before(banner);
     const reset = global.App.reiniciarDemo;
     global.App.reiniciarDemo = function () {
       if (global.APP_CONFIG.mode !== 'demo') return;
       if (global.confirm('Reset only the local IC Admin demo? Local test changes will be removed. Mexico and Airtable are not affected.')) reset();
     };
-    banner.querySelector('button').addEventListener('click', function () { global.App.reiniciarDemo(); });
+    banner.querySelector('.demo-reset').addEventListener('click', function () { global.App.reiniciarDemo(); });
     let busy = false;
     async function enter(number) {
       if (busy || global.APP_CONFIG.mode !== 'demo') return;
       busy = true;
       try { await global.App.quickLogin(String(number || '').trim()); } finally { busy = false; }
     }
+    banner.querySelectorAll('[data-demo-user]').forEach(function (button) {
+      button.addEventListener('click', function () { enter(button.getAttribute('data-demo-user')); });
+    });
     doc.addEventListener('click', function (event) {
       if (global.APP_CONFIG.mode !== 'demo') return;
       const button = event.target.closest && event.target.closest('#btnSolicitarCodigo');

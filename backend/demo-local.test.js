@@ -20,6 +20,30 @@ test('all advertised demo users can authenticate locally, without backend',async
   }
   assert.equal(calls(),0);assert.equal(c.APP_CONFIG.apiBaseUrl,'');assert.equal(c.APP_CONFIG.writeApiEnabled,false);
 });
+test('manager demo users expose both manager and employee capabilities',async()=>{
+  const {context:c}=runtime();
+  for(const id of ['20001','20002']){
+    await c.EDDAuth.requestCode(id);await c.EDDAuth.verifyCode(id,c.APP_CONFIG.demoCode);
+    const user=c.EDDAuth.getAppUser();
+    assert.equal(user.perfil,'lider');
+    assert.equal(user.capabilities.canEvaluate,true);
+    assert.equal(user.capabilities.canSelfEvaluate,true);
+    assert.ok(c.EDDStorage.getTodosColaboradores().some(person=>person.empleado===id));
+    c.EDDAuth.clearSession();
+  }
+});
+test('an existing pre-capabilities manager session is upgraded locally',()=>{
+  const {context:c}=runtime();
+  c.sessionStorage.setItem(c.APP_CONFIG.sessionStorageKey,JSON.stringify({token:'demo-existing',expiresAt:new Date(Date.now()+60000).toISOString(),user:{numeroEmpleado:'20001',nombreCompleto:'Demo Manager 20001',rol:'Líder'}}));
+  const user=c.EDDAuth.getAppUser();
+  assert.equal(user.capabilities.canEvaluate,true);assert.equal(user.capabilities.canSelfEvaluate,true);
+});
+test('DO admin demo user opens with administrator capability',async()=>{
+  const {context:c}=runtime();
+  await c.EDDAuth.requestCode('90001');await c.EDDAuth.verifyCode('90001',c.APP_CONFIG.demoCode);
+  const user=c.EDDAuth.getAppUser();
+  assert.equal(user.perfil,'administrador');assert.equal(user.capabilities.isAdmin,true);
+});
 test('seed includes blank, submitted, calibration and feedback test cases',()=>{
   const {context:c}=runtime();const s=c.EDDStorage,p=s.getPeriodoActivo().id;
   assert.equal(s.getEvaluacion('10001',p,'autoevaluacion'),undefined);
@@ -31,7 +55,7 @@ test('seed includes blank, submitted, calibration and feedback test cases',()=>{
 });
 test('reset and persistence affect only the new local demo namespace',()=>{
   const {context:c}=runtime();c.localStorage.setItem('edd_ic_admin_db_v1','old ICA data');c.localStorage.setItem('edd_mexico','Mexico sentinel');
-  const db=c.EDDStorage.load();db.colaboradores[0].nombre='Edited sample';c.EDDStorage.persist();assert.match(c.localStorage.getItem('edd_ic_admin_demo_db_v2'),/Edited sample/);
+  const db=c.EDDStorage.load();db.colaboradores[0].nombre='Edited sample';c.EDDStorage.persist();assert.match(c.localStorage.getItem('edd_ic_admin_demo_db_v3'),/Edited sample/);
   c.EDDStorage.reset();assert.equal(c.localStorage.getItem('edd_ic_admin_db_v1'),'old ICA data');assert.equal(c.localStorage.getItem('edd_mexico'),'Mexico sentinel');assert.match(c.EDDStorage.load().colaboradores[0].nombre,/^Demo/);
 });
 test('API mode does not apply synthetic identity overrides or accept demo authentication',async()=>{

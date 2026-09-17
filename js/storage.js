@@ -46,7 +46,10 @@
   // limpia. La SESIÓN (login) es independiente de esto: vive en
   // sessionStorage bajo APP_CONFIG.sessionStorageKey (ver auth.js), no en
   // esta clave de localStorage.
-  const STORAGE_KEY = 'edd_ic_admin_demo_db_v2';
+  // v3 local demo: managers 20001/20002 also have their own employee record
+  // and self-assessment. A clean namespace prevents an old browser seed from
+  // hiding the newly accumulated profiles.
+  const STORAGE_KEY = 'edd_ic_admin_demo_db_v3';
   let _db = null; // caché en memoria
 
   // ===========================================================================
