@@ -1248,10 +1248,11 @@
 
   function viewLogin() {
     const L = state.login;
+    const accesoRestringido = global.APP_CONFIG.mode !== 'api';
     const avisoExpirada = L.sessionExpiredNotice
       ? `<p class="alert alert-warning premium-login-alert">Tu sesión anterior expiró por inactividad. Inicia sesión de nuevo.</p>`
       : '';
-    const cuerpo = L.paso === 'validar' ? viewLoginValidar(L) : viewLoginSolicitar(L);
+    const cuerpo = accesoRestringido ? viewLoginCredenciales(L) : (L.paso === 'validar' ? viewLoginValidar(L) : viewLoginSolicitar(L));
     return `
     <div class="login-screen premium-login-screen">
       <section class="premium-login-shell">
@@ -1273,15 +1274,28 @@
           <div class="premium-login-form-wrap">
             <div class="premium-login-lang">${languageSwitcher(false)}</div>
             <div class="premium-login-mobile-logo"><img src="assets/ic-admin-logo-white.svg" alt="IC Admin" /></div>
-            <div class="premium-login-step">${L.paso === 'validar' ? 'Verificación de identidad' : 'Bienvenido(a)'}</div>
-            <h2>${L.paso === 'validar' ? 'Ingresa tu código de acceso' : 'Inicia sesión'}</h2>
-            <p class="premium-login-description">${L.paso === 'validar' ? 'Revisa tu correo corporativo y captura el código temporal de 6 dígitos.' : 'Utiliza tu número de empleado para acceder a tu evaluación.'}</p>
+            <div class="premium-login-step">${accesoRestringido ? 'Acceso autorizado' : (L.paso === 'validar' ? 'Verificación de identidad' : 'Bienvenido(a)')}</div>
+            <h2>${accesoRestringido ? 'Inicia sesión' : (L.paso === 'validar' ? 'Ingresa tu código de acceso' : 'Inicia sesión')}</h2>
+            <p class="premium-login-description">${accesoRestringido ? 'Ingresa tu número de empleado y contraseña para continuar.' : (L.paso === 'validar' ? 'Revisa tu correo corporativo y captura el código temporal de 6 dígitos.' : 'Utiliza tu número de empleado para acceder a tu evaluación.')}</p>
             ${avisoExpirada}
             ${cuerpo}
             <div class="premium-login-security">▾ &nbsp; Acceso protegido · Uso exclusivo de personal autorizado</div>
           </div>
         </div>
       </section>
+    </div>`;
+  }
+
+  function viewLoginCredenciales(L) {
+    return `
+    <div class="login-form premium-login-form">
+      <label for="loginEmpleado">Número de empleado</label>
+      <div class="premium-input-wrap"><span>♙</span><input id="loginEmpleado" type="text" inputmode="numeric" autocomplete="username" placeholder="Ingresa tu número de empleado" value="${esc(L.numeroEmpleado)}" /></div>
+      <label for="loginPassword">Contraseña</label>
+      <div class="premium-input-wrap"><span>◆</span><input id="loginPassword" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" placeholder="Ingresa tu contraseña" /></div>
+      <p class="premium-field-help">Acceso disponible únicamente para usuarios autorizados.</p>
+      ${L.error ? `<p class="alert alert-danger">${esc(L.error)}</p>` : ''}
+      <button class="btn btn-primary btn-block premium-login-primary" id="btnLoginCredenciales" ${L.loading ? 'disabled' : ''}>${L.loading ? 'Validando…' : 'Ingresar a la plataforma'} <span>→</span></button>
     </div>`;
   }
 
@@ -1320,6 +1334,19 @@
 
   function bindLogin() {
     detenerCountdown();
+    if (global.APP_CONFIG.mode !== 'api') {
+      const submit = () => Actions.loginRestringido(
+        ($('#loginEmpleado') || {}).value || '',
+        ($('#loginPassword') || {}).value || ''
+      );
+      const button = $('#btnLoginCredenciales');
+      if (button) button.addEventListener('click', submit);
+      ['#loginEmpleado','#loginPassword'].forEach((selector) => {
+        const input = $(selector);
+        if (input) input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') submit(); });
+      });
+      return;
+    }
     if (state.login.paso === 'validar') {
       iniciarCountdown();
       $('#btnValidarCodigo').addEventListener('click', () => Actions.validarCodigo());
@@ -3406,6 +3433,8 @@
     if (tipo === 'timeout') return 'La solicitud tardó demasiado. Intenta de nuevo.';
     if (tipo === 'expired') return 'El código venció. Solicita uno nuevo.';
     if (tipo === 'invalid_code') return 'Código inválido. Verifica los 6 dígitos e intenta de nuevo.';
+    if (tipo === 'invalid_credentials') return 'Usuario o contraseña incorrectos.';
+    if (tipo === 'unavailable') return 'El acceso seguro no está disponible en este navegador.';
     if (tipo === 'validation') return err.message || 'Verifica los datos capturados.';
     if (tipo === 'unauthorized') return 'Tu sesión expiró. Inicia sesión nuevamente.';
     return 'Ocurrió un error inesperado. Intenta de nuevo.';
@@ -3619,6 +3648,36 @@
       navigate('#/perfil');
     },
     logout,
+    async loginRestringido(numeroEmpleado, password) {
+      numeroEmpleado = String(numeroEmpleado || '').trim();
+      password = String(password || '').trim();
+      state.login.error = null;
+      state.login.info = null;
+      if (!numeroEmpleado || !password) {
+        state.login.error = 'Ingresa tu número de empleado y contraseña.';
+        render();
+        return;
+      }
+      state.login.loading = true;
+      state.login.numeroEmpleado = numeroEmpleado;
+      render();
+      try {
+        await A.requestCode(numeroEmpleado);
+        await A.verifyCode(numeroEmpleado, password);
+        const appUser = A.getAppUser();
+        limpiarPerfil(appUser);
+        state.user = aplicarPerfilSeleccionado(appUser);
+        S.addAudit(appUser.nombre, 'Inicio de sesión', 'usuarios', appUser.empleado, null, appUser.perfil);
+        resetLoginState('solicitar');
+        resetRemoteForProfile();
+        irAHomeDePerfil('administrador');
+      } catch (err) {
+        console.error('Error al iniciar sesión', err);
+        state.login.loading = false;
+        state.login.error = mensajeErrorLogin(err);
+        render();
+      }
+    },
     async solicitarCodigo(numeroEmpleado) {
       state.login.error = null; state.login.info = null;
       if (!numeroEmpleado) { state.login.error = 'Captura tu número de empleado.'; render(); return; }
@@ -3667,28 +3726,6 @@
       A.limpiarPendiente();
       resetLoginState('solicitar');
       render();
-    },
-    async quickLogin(numeroEmpleado) {
-      if (global.APP_CONFIG.mode === 'api') return; // solo disponible en modo demo
-      state.login.error = null; state.login.info = null; state.login.loading = true; render();
-      try {
-        await A.requestCode(numeroEmpleado);
-        const resp = await A.verifyCode(numeroEmpleado, global.APP_CONFIG.demoCode);
-        const appUser = A.getAppUser();
-        limpiarPerfil(appUser);
-        state.user = aplicarPerfilSeleccionado(appUser);
-        S.addAudit(appUser.nombre, 'Inicio de sesión', 'usuarios', appUser.empleado, null, appUser.perfil);
-        resetLoginState('solicitar');
-        resetRemoteForProfile();
-        const perfiles = perfilesDisponibles(appUser);
-        if (perfiles.length > 1) navigate('#/perfil');
-        else irAHomeDePerfil(state.user.perfil);
-      } catch (err) {
-        console.error('Error en acceso rápido', err);
-        state.login.loading = false;
-        state.login.error = mensajeErrorLogin(err);
-        render();
-      }
     },
     async comenzarEvaluacion() {
       marcarIntroVista();

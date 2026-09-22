@@ -40,7 +40,19 @@
     // IC Admin remains isolated in demo mode until its own backend and data
     // environment are available. Never point this instance at the Mexico API.
     mode: 'demo',
-    demoCode: '000000', // Simulation only; never accepted in API mode.
+
+    // Acceso temporal restringido para la revisión ejecutiva. La contraseña
+    // nunca se guarda en texto plano: auth.js compara SHA-256 de
+    // "numeroEmpleado:contraseña". Este control es solo para el entorno
+    // estático de revisión; producción deberá usar OTP o Entra ID SSO.
+    restrictedAccess: {
+      employeeNumber: '10001',
+      credentialHash: '8f514a1e651defbcc839529b02e7bb45efddb7c3cf08cf900629bdcebab4d1c1',
+      displayName: 'Gabriel Sabogal',
+      role: 'Administrador',
+      position: 'VP Corporate LATAM / Managing Director México',
+      area: 'Dirección General'
+    },
 
     // Base de los webhooks de n8n. Sustituir por la URL real del entorno
     // cuando exista. No se usa en modo "demo".
@@ -49,7 +61,9 @@
     // Clave usada en sessionStorage para guardar la sesión (token + usuario).
     // Ver auth.js. Se usa sessionStorage y no localStorage a propósito: el
     // token no debe sobrevivir a que el usuario cierre la pestaña/navegador.
-    sessionStorageKey: 'edd_ic_admin_demo_session_v2',
+    // Nueva clave para invalidar inmediatamente cualquier sesión creada por
+    // los accesos demo anteriores.
+    sessionStorageKey: 'edd_ic_admin_restricted_session_v1',
 
     // Tiempo máximo (ms) que api.js espera una respuesta antes de abortar la
     // petición y mostrar "Error de conexión".

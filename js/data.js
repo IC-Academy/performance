@@ -184,7 +184,7 @@
   ];
 
   const ADMINISTRADORES = [
-    { empleado: '90001', nombre: 'Administrador DO', puesto: 'Administrador de DO', area: 'Desarrollo Organizacional', correoCorporativo: 'rh.admin@intercon.com.mx', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-07-20' }
+    { empleado: '10001', nombre: 'Gabriel Sabogal', puesto: 'VP Corporate LATAM / Managing Director México', area: 'Dirección General', correoCorporativo: '', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-22' }
   ];
 
   // perfilObjetivo: valores de referencia (1-5) usados por el generador de respuestas

@@ -57,6 +57,15 @@
 
   function esperar(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
 
+  async function sha256Hex(value) {
+    if (!global.crypto || !global.crypto.subtle || !global.TextEncoder) {
+      throw new global.EDDApi.ApiError('unavailable', 'El acceso seguro no está disponible en este navegador.');
+    }
+    const bytes = new global.TextEncoder().encode(String(value));
+    const digest = await global.crypto.subtle.digest('SHA-256', bytes);
+    return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, '0')).join('');
+  }
+
   // ===========================================================================
   // PASO 1: SOLICITAR CÓDIGO
   // ===========================================================================
@@ -77,24 +86,21 @@
       return resp;
     }
 
-    // --- Modo demo: no hay backend. Simulamos latencia de red y armamos una
-    // respuesta neutra, sin revelar si el número de empleado existe (mismo
-    // comportamiento que tendría n8n en producción). El correo enmascarado
-    // solo se muestra si el usuario existe en la semilla de demo.
-    await esperar(500);
-    const u = global.EDDStorage.getUsuario(numeroEmpleado);
-    const correoDemo = u ? correoDeUsuarioDemo(numeroEmpleado) : null;
+    // Acceso estático restringido: se crea un desafío efímero sin revelar si
+    // el número existe. La validación de ambas credenciales ocurre en el paso
+    // siguiente y devuelve siempre un error genérico cuando no coinciden.
+    await esperar(250);
     const requestId = generarRequestId();
     pendiente = {
       numeroEmpleado,
       requestId,
-      maskedEmail: correoDemo ? maskEmail(correoDemo) : null,
+      maskedEmail: null,
       expiresAt: Date.now() + cfg().codeValidityMinutes * 60000
     };
     return {
       success: true,
-      message: 'Si el número de empleado se encuentra registrado, recibirás un código temporal en el correo asociado.',
-      maskedEmail: pendiente.maskedEmail,
+      message: 'Credenciales recibidas.',
+      maskedEmail: null,
       requestId
     };
   }
@@ -135,30 +141,34 @@
       return resp;
     }
 
-    // --- Modo demo: único código válido es APP_CONFIG.demoCode. Nunca se
-    // acepta un código fijo en modo "api" (esa rama ni siquiera llega aquí).
-    if (codigo !== cfg().demoCode) {
-      throw new global.EDDApi.ApiError('invalid_code', 'El código capturado no es válido.');
+    const access = cfg().restrictedAccess || {};
+    const digest = await sha256Hex(numeroEmpleado + ':' + codigo);
+    if (numeroEmpleado !== String(access.employeeNumber || '') || digest !== access.credentialHash) {
+      throw new global.EDDApi.ApiError('invalid_credentials', 'Usuario o contraseña incorrectos.');
     }
     const u = global.EDDStorage.getUsuario(numeroEmpleado);
     if (!u) {
-      throw new global.EDDApi.ApiError('invalid_code', 'El código capturado no es válido.');
+      throw new global.EDDApi.ApiError('invalid_credentials', 'Usuario o contraseña incorrectos.');
     }
-    const detalle = detalleUsuarioDemo(u);
-    const isAdmin = global.EDDData.ADMINISTRADORES.some((person) => person.empleado === numeroEmpleado);
-    const canEvaluate = global.EDDData.LIDERES.some((person) => person.empleado === numeroEmpleado);
-    const canSelfEvaluate = global.EDDData.COLABORADORES.some((person) => person.empleado === numeroEmpleado);
     const expiresIn = cfg().defaultSessionSeconds;
     const session = {
       token: generarTokenDemo(),
       expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString(),
       user: {
-        numeroEmpleado: u.empleado,
-        nombreCompleto: u.nombre,
-        rol: ROL_INTERNO_A_API[u.perfil] || u.perfil,
-        puesto: detalle.puesto,
-        area: detalle.area,
-        capabilities: { isAdmin, canEvaluate, canSelfEvaluate }
+        numeroEmpleado,
+        nombreCompleto: access.displayName || u.nombre,
+        rol: access.role || 'Administrador',
+        puesto: access.position || '',
+        area: access.area || '',
+        capabilities: {
+          isAdmin: true,
+          canAdminister: true,
+          canManage: true,
+          canCalibrate: true,
+          canViewAllEvaluations: true,
+          canEvaluate: false,
+          canSelfEvaluate: false
+        }
       }
     };
     guardarSesion(session);
@@ -249,9 +259,20 @@
     // API sessions remain governed exclusively by /auth/me capabilities.
     if (cfg().mode === 'demo') {
       const employeeId = String(session.user.numeroEmpleado || '');
-      caps.isAdmin = global.EDDData.ADMINISTRADORES.some((person) => person.empleado === employeeId);
-      caps.canEvaluate = global.EDDData.LIDERES.some((person) => person.empleado === employeeId);
-      caps.canSelfEvaluate = global.EDDData.COLABORADORES.some((person) => person.empleado === employeeId);
+      const restrictedId = String((cfg().restrictedAccess && cfg().restrictedAccess.employeeNumber) || '');
+      if (employeeId === restrictedId) {
+        caps.isAdmin = true;
+        caps.canAdminister = true;
+        caps.canManage = true;
+        caps.canCalibrate = true;
+        caps.canViewAllEvaluations = true;
+        caps.canEvaluate = false;
+        caps.canSelfEvaluate = false;
+      } else {
+        caps.isAdmin = false;
+        caps.canEvaluate = false;
+        caps.canSelfEvaluate = false;
+      }
     }
     const rolNormalizado = String(session.user.rol || '').toLowerCase();
     const perfil = caps.isAdmin ? 'administrador' : (caps.canEvaluate ? 'lider' : (ROL_API_A_INTERNO[rolNormalizado] || rolNormalizado || 'colaborador'));
