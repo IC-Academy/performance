@@ -230,7 +230,7 @@
     const toolTable = tables.find(t => {
       const h = lower(txt(t.querySelector('thead')));
       const body = lower(txt(t.querySelector('tbody')));
-      return /herramienta/.test(h) && /excel|power bi|manejo de ia/.test(body) && /auto/.test(h) && /l[ií]der/.test(h);
+      return /herramienta/.test(h) && /salesforce|paycom|concur|excel|sharepoint|planner|powerpoint|iq-iconiq/.test(body) && /auto/.test(h) && /l[ií]der/.test(h);
     });
     if (!toolTable) return;
     const toolRows = Array.from(toolTable.querySelectorAll('tbody tr'));

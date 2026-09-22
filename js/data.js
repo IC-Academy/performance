@@ -97,7 +97,7 @@
         id: 'B2', nombre: 'Procesos y Herramientas de Trabajo', peso: 6,
         conductas: [
           'Conoce y aplica correctamente los procesos, políticas y procedimientos de su área.',
-          'Utiliza con eficiencia las herramientas y sistemas de uso general en Inter-Con: Excel, Office, Outlook, Teams, Concur y las plataformas internas que apliquen a su puesto.',
+          'Utiliza con eficiencia las herramientas y sistemas aplicables a su puesto: Salesforce, Paycom, Concur, Excel, SharePoint, Planner, PowerPoint, IQ-iconiq u otros.',
           'Considera el cuadro de apoyo de herramientas para determinar el nivel de dominio aplicable al puesto.'
         ]
       },

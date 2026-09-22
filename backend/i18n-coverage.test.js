@@ -119,3 +119,18 @@ test('calibration comparison and Outlook compose link are present', () => {
   assert.match(app, /global\.EDDInlineEnglish = EN/);
   assert.match(unified, /global\.EDDInlineEnglish/);
 });
+
+test('software catalog uses the approved IC Admin list across the evaluation flow', () => {
+  const app = fs.readFileSync(require('node:path').join(__dirname, '../js/app.js'), 'utf8');
+  const catalog = app.match(/const HERRAMIENTAS_B2 = \[([\s\S]*?)\n  \];/);
+  assert.ok(catalog, 'software catalog must exist');
+  for (const label of ['Salesforce', 'Paycom', 'Concur', 'Excel', 'SharePoint', 'Planner', 'PowerPoint', 'IQ-iconiq', 'Otros']) {
+    assert.match(catalog[1], new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), label);
+  }
+  for (const removed of ['Word y PowerPoint', 'Outlook', 'Teams / SharePoint / OneDrive', 'Power BI', 'AI tools']) {
+    assert.doesNotMatch(catalog[1], new RegExp(removed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), removed);
+  }
+  for (const key of ['salesforce', 'payCom', 'concur', 'excel', 'sharePoint', 'planner', 'powerPoint', 'iqIconiq', 'others']) {
+    assert.match(app, new RegExp(`${key}:h\\.`), `payload ${key}`);
+  }
+});

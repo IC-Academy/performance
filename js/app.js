@@ -645,10 +645,18 @@
     if (!cid) return;
     const up = String(cid).toUpperCase();
     const val = ans.value ?? ans.valor ?? ans.rating ?? '';
-    if (up === 'TOOL-EXCEL') return S.saveHerramientaEvaluacion(localEvalId, 'excel', val);
-    if (up === 'TOOL-POWERBI') return S.saveHerramientaEvaluacion(localEvalId, 'analisis', val);
-    if (up === 'TOOL-IA') return S.saveHerramientaEvaluacion(localEvalId, 'ia', val);
-    if (up === 'TOOL-PAYCOM') return S.saveHerramientaEvaluacion(localEvalId, 'paycom', val);
+    const remoteToolMap = {
+      'TOOL-SALESFORCE':'salesforce',
+      'TOOL-PAYCOM':'paycom',
+      'TOOL-CONCUR':'concur',
+      'TOOL-EXCEL':'excel',
+      'TOOL-SHAREPOINT':'sharepoint',
+      'TOOL-PLANNER':'planner',
+      'TOOL-POWERPOINT':'powerpoint',
+      'TOOL-IQ-ICONIQ':'iqiconiq',
+      'TOOL-OTROS':'otros'
+    };
+    if (remoteToolMap[up]) return S.saveHerramientaEvaluacion(localEvalId, remoteToolMap[up], val);
     const sec = ans.section || ans.seccion || (up.startsWith('A') ? 'actitud' : 'habilidades');
     S.saveRespuesta(localEvalId, sec, String(cid), val, ans.comment || ans.comentario || '');
   }
@@ -835,7 +843,7 @@
     }));
     return {
       answers,
-      tools:{ excel:h.excel ?? '', powerBi:h.analisis ?? '', payCom:h.paycom ?? '', ia:h.ia ?? '' },
+      tools:toolDraftPayload(h),
       objectives,
       noObjectives,
       noObjectivesReason: noObjectives ? (ev.objetivosNoAplicanMotivo || '') : '',
@@ -865,7 +873,7 @@
     })) : [];
     return {
       answers,
-      tools:{ excel:h.excel ?? '', powerBi:h.analisis ?? '', payCom:h.paycom ?? '', ia:h.ia ?? '' },
+      tools:toolDraftPayload(h),
       objectives,
       noObjectivesDecision: decision || '',
       noObjectivesLeaderComment: ev.objetivosNoAplicanComentarioLider || '',
@@ -1575,11 +1583,31 @@
   // Interim IC Admin catalog. The complete role-based competency and tools
   // catalog will be validated with Alejandrina Badillo (Technology).
   const HERRAMIENTAS_B2 = [
-    ['excel','Excel'],['office','Word y PowerPoint'],['outlook','Outlook'],['teams','Teams / SharePoint / OneDrive'],
-    ['analisis','Power BI / analytics reports (direct use or shared outputs)'],
-    ['paycom','PayCom / payroll information (direct or indirect use)'],
-    ['ia','AI tools']
+    ['salesforce','Salesforce'],
+    ['paycom','Paycom'],
+    ['concur','Concur'],
+    ['excel','Excel'],
+    ['sharepoint','SharePoint'],
+    ['planner','Planner'],
+    ['powerpoint','PowerPoint'],
+    ['iqiconiq','IQ-iconiq'],
+    ['otros','Otros']
   ];
+
+  function toolDraftPayload(tools) {
+    const h = tools || {};
+    return {
+      salesforce:h.salesforce ?? '',
+      payCom:h.paycom ?? '',
+      concur:h.concur ?? '',
+      excel:h.excel ?? '',
+      sharePoint:h.sharepoint ?? '',
+      planner:h.planner ?? '',
+      powerPoint:h.powerpoint ?? '',
+      iqIconiq:h.iqiconiq ?? '',
+      others:h.otros ?? ''
+    };
+  }
 
   function viewAutoevaluacion(col, periodoId, estado) {
     const ev = ensureWizard(col, periodoId);
@@ -3131,7 +3159,17 @@
         const findAns = (cid, leader) => answers.find(a => cidOf(a)===cid && (leader ? /l[ií]der|leader/.test(roleOf(a)) : !/l[ií]der|leader/.test(roleOf(a))));
         const cat = [...(D.COMPETENCIAS.actitud||[]), ...(D.COMPETENCIAS.habilidades||[])];
         const competencyRows = cat.map(c=>{ const aa=findAns(c.id,false), ll=findAns(c.id,true); const av=valOf(aa), lv=valOf(ll); const diff=(typeof av==='number'&&typeof lv==='number')?Number(lv)-Number(av):null; return `<tr class="${diff!=null&&Math.abs(diff)>=2?'cal-gap-row':''}"><td><strong>${esc(c.nombre)}</strong><small>${esc(c.id)} · ${c.peso}%</small></td><td>${av==null?'—':esc(av)}</td><td>${lv==null?'—':esc(lv)}</td><td>${diff==null?'—':(diff>0?'+':'')+f1(diff)}</td><td>${esc(commentOf(ll)||commentOf(aa)||'—')}</td></tr>`; }).join('');
-        const toolDefs=[['TOOL-EXCEL','Excel'],['TOOL-POWERBI','Power BI'],['TOOL-PAYCOM','PayCom'],['TOOL-IA','AI tools']];
+        const toolDefs=[
+          ['TOOL-SALESFORCE','Salesforce'],
+          ['TOOL-PAYCOM','Paycom'],
+          ['TOOL-CONCUR','Concur'],
+          ['TOOL-EXCEL','Excel'],
+          ['TOOL-SHAREPOINT','SharePoint'],
+          ['TOOL-PLANNER','Planner'],
+          ['TOOL-POWERPOINT','PowerPoint'],
+          ['TOOL-IQ-ICONIQ','IQ-iconiq'],
+          ['TOOL-OTROS','Otros']
+        ];
         const toolRows=toolDefs.map(([id,label])=>{const aa=findAns(id,false),ll=findAns(id,true);return `<tr><td><strong>${label}</strong></td><td>${valOf(aa)??'—'}</td><td>${valOf(ll)??'—'}</td></tr>`}).join('');
 
         const objRows = objectives.length ? objectives.map((o,i)=>{
