@@ -95,3 +95,27 @@ test('DO calibration and feedback notices are translated', () => {
   };
   for (const [source, expected] of Object.entries(cases)) assert.equal(t(source), expected, source);
 });
+
+test('launch review requirements are covered in English', () => {
+  const t = translator();
+  assert.equal(
+    t('Evalúa la vivencia diaria de los valores ESPÍRITU de Inter-Con y la forma en que el colaborador se conduce con las personas. ESPÍRITU significa Excelencia, Servicio, Pasión, Integridad, Respeto, Innovación, Trabajo en equipo y Unidad.'),
+    'Evaluate how consistently the employee demonstrates Inter-Con’s ESPÍRITU values and interacts with others. ESPÍRITU stands for Excellence, Service, Passion, Integrity, Respect, Innovation, Teamwork, and Unity.'
+  );
+  assert.equal(
+    t('Se abrirá un evento nuevo de Outlook en otra pestaña con el asunto y el contexto prellenados. Selecciona la fecha y hora, confirma al invitado y envía la invitación. EDD no guarda el evento; después confirma aquí que tuvieron la reunión y documenta los acuerdos.'),
+    'A new Outlook event opens in another tab with the subject and context prefilled. Select the date and time, confirm the attendee, and send the invitation. EDD does not save the event; afterward, confirm the meeting here and document the agreements.'
+  );
+});
+
+test('calibration comparison and Outlook compose link are present', () => {
+  const app = fs.readFileSync(require('node:path').join(__dirname, '../js/app.js'), 'utf8');
+  const unified = fs.readFileSync(require('node:path').join(__dirname, '../js/i18n-unified-v33.js'), 'utf8');
+  for (const label of ['Expected standard', 'Calibrated employee result', 'Company average', 'FINAL CALIBRATION VIEW']) {
+    assert.match(app, new RegExp(label), label);
+  }
+  assert.match(app, /outlook\.office\.com\/calendar\/0\/deeplink\/compose/);
+  assert.match(app, /params\.set\('to', col\.correoCorporativo\)/);
+  assert.match(app, /global\.EDDInlineEnglish = EN/);
+  assert.match(unified, /global\.EDDInlineEnglish/);
+});

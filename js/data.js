@@ -31,7 +31,7 @@
   // Ponderación oficial Rev. 4: 40% Valores/Actitud + 30% Técnica Funcional + 30% Objetivos.
   // ===========================================================================
   const SECCIONES_META = {
-    actitud: { titulo: 'A. Valores y Actitud', peso: 40, eje: 'ACTITUD', descripcion: 'Evalúa la vivencia diaria de los valores ESPÍRITU de Inter-Con y la forma en que el colaborador se conduce con las personas.' },
+    actitud: { titulo: 'A. Valores y Actitud', peso: 40, eje: 'ACTITUD', descripcion: 'Evalúa la vivencia diaria de los valores ESPÍRITU de Inter-Con y la forma en que el colaborador se conduce con las personas. ESPÍRITU significa Excelencia, Servicio, Pasión, Integridad, Respeto, Innovación, Trabajo en equipo y Unidad.' },
     habilidades: { titulo: 'B. Conocimientos y Habilidades Técnicas del Puesto', peso: 30, eje: 'DESEMPEÑO', descripcion: 'Evalúa el dominio técnico del puesto, el uso de procesos y herramientas del área y la forma en que el colaborador organiza y controla su trabajo.' },
     conocimientos: { titulo: 'Sección interna no utilizada', peso: 0, eje: 'DESEMPEÑO', descripcion: '' },
     objetivos: { titulo: 'C. Cumplimiento de Objetivos', peso: 30, eje: 'DESEMPEÑO', descripcion: 'Registra hasta cinco objetivos acordados al inicio del periodo, con su meta o indicador, resultado alcanzado, porcentaje de cumplimiento y calificación.' }

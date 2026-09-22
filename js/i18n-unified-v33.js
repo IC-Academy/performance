@@ -85,6 +85,7 @@
   "Registra hasta cinco objetivos acordados al inicio del periodo, con su meta o indicador, resultado alcanzado, porcentaje de cumplimiento y calificación.": "Enter up to five goals agreed at the start of the period, including the target or indicator, achieved result, achievement percentage, and rating.",
   "Agendar reunión en Outlook": "Schedule meeting in Outlook",
   "Se abrirá el calendario de Outlook en otra pestaña. Agenda la reunión e invita al colaborador manualmente. EDD no guarda el evento; después confirma aquí que tuvieron la reunión y documenta los acuerdos.": "Outlook Calendar opens in a new tab. Schedule the meeting and invite the employee manually. EDD does not save the event; afterward, confirm the meeting here and document the agreements.",
+  "Se abrirá un evento nuevo de Outlook en otra pestaña con el asunto y el contexto prellenados. Selecciona la fecha y hora, confirma al invitado y envía la invitación. EDD no guarda el evento; después confirma aquí que tuvieron la reunión y documenta los acuerdos.": "A new Outlook event opens in another tab with the subject and context prefilled. Select the date and time, confirm the attendee, and send the invitation. EDD does not save the event; afterward, confirm the meeting here and document the agreements.",
   "Inicio": "Home",
   "Autoevaluación": "Self-assessment",
   "Retroalimentación": "Feedback",
@@ -387,6 +388,7 @@
   "Eje ACTITUD": "ATTITUDE axis",
   "Eje DESEMPEÑO": "PERFORMANCE axis",
   "Evalúa la vivencia diaria de los valores ESPÍRITU de Inter-Con y la forma en que el colaborador se conduce con las personas.": "Evaluate how consistently the employee demonstrates Inter-Con’s ESPÍRITU values and interacts with others.",
+  "Evalúa la vivencia diaria de los valores ESPÍRITU de Inter-Con y la forma en que el colaborador se conduce con las personas. ESPÍRITU significa Excelencia, Servicio, Pasión, Integridad, Respeto, Innovación, Trabajo en equipo y Unidad.": "Evaluate how consistently the employee demonstrates Inter-Con’s ESPÍRITU values and interacts with others. ESPÍRITU stands for Excellence, Service, Passion, Integrity, Respect, Innovation, Teamwork, and Unity.",
   "Evalúa el dominio técnico del puesto, el uso de procesos y herramientas del área y la forma en que el colaborador organiza y controla su trabajo.": "Evaluate technical mastery of the role, use of area processes and tools, and how the employee organizes and controls their work.",
   "Es puntual, constante y cumple los compromisos que asume.": "Is punctual, consistent, and follows through on commitments.",
   "Aplica correctamente los conocimientos técnicos y normativos de su puesto.": "Correctly applies the technical and regulatory knowledge required for the role.",
@@ -871,7 +873,31 @@
   "Guarda la calibración antes de habilitar la retroalimentación.": "Save the calibration before enabling feedback.",
   "El resultado es menor a 80. Registra al menos un plan de desarrollo antes de habilitar la retroalimentación.": "The result is below 80. Add at least one development plan before enabling feedback.",
   "Retroalimentación habilitada. El colaborador podrá continuar cuando reciba la notificación correspondiente.": "Feedback enabled. The employee can continue once they receive the corresponding notification.",
-  "Verifica que \"Alineada\" sea menor que \"Revisar\".": "Verify that \"Aligned\" is less than \"Review\"."
+  "Verifica que \"Alineada\" sea menor que \"Revisar\".": "Verify that \"Aligned\" is less than \"Review\".",
+  "ESCALA DE EVALUACIÓN": "RATING SCALE",
+  "Captura un número de empleado válido.": "Enter a valid employee number.",
+  "El código capturado no es válido.": "The code entered is not valid.",
+  "El código debe tener 6 dígitos.": "The code must contain 6 digits.",
+  "Primero solicita un código para este número de empleado.": "Request a code for this employee number first.",
+  "Si el número de empleado se encuentra registrado, recibirás un código temporal en el correo asociado.": "If the employee number is registered, a temporary code will be sent to the associated email address.",
+  "Sin elementos suficientes para evaluar en este periodo.": "Insufficient information to evaluate during this cycle.",
+  "Sección interna no utilizada": "Unused internal section",
+  "colaborador": "employee",
+  "líder": "manager",
+  "Dirección Corporativa": "Corporate Office",
+  "Dirección Administrativa": "Administration",
+  "Dirección de Operaciones": "Operations",
+  "Dirección de Tecnología": "Technology",
+  "Dirección Comercial": "Sales",
+  "Comparte información relevante para facilitar el trabajo de los demás.": "Shares relevant information to help others perform their work.",
+  "Recibe la retroalimentación con disposición para mejorar.": "Receives feedback with a willingness to improve.",
+  "Cumple consistentemente los objetivos y estándares establecidos.": "Consistently meets established goals and standards.",
+  "Mantiene altos estándares de calidad y precisión en su trabajo.": "Maintains high standards of quality and accuracy in their work.",
+  "Cumple políticas y procedimientos internos, así como los requisitos de la documentación a su cargo.": "Complies with internal policies, procedures, and assigned documentation requirements.",
+  "Actualizar el 100% de los expedientes del área durante el trimestre.": "Update 100% of the area's records during the quarter.",
+  "Se actualizó el 95% de los expedientes; quedaron pendientes 2 casos especiales.": "95% of the records were updated; 2 special cases remained pending.",
+  "Capacitar al equipo en el nuevo procedimiento operativo.": "Train the team on the new operating procedure.",
+  "Se capacitó al 100% del equipo con evaluación de conocimientos aprobatoria.": "100% of the team completed the training and passed the knowledge assessment."
 }));
 
   // -------------------------------------------------------------------
@@ -937,10 +963,12 @@
     const trailing = (raw.match(/\s*$/) || [''])[0];
     const core = raw.trim();
     if (!core) return raw;
-    const hit = DICT.get(core);
+    const inlineCatalog = global.EDDInlineEnglish || {};
+    const hit = DICT.has(core) ? DICT.get(core) : inlineCatalog[core];
     if (hit !== undefined) return leading + hit + trailing;
 
-    const normalizedHit = DICT.get(core.replace(/\s+/g, ' '));
+    const normalizedCore = core.replace(/\s+/g, ' ');
+    const normalizedHit = DICT.has(normalizedCore) ? DICT.get(normalizedCore) : inlineCatalog[normalizedCore];
     if (normalizedHit !== undefined) return leading + normalizedHit + trailing;
     const evaluationTitle = core.match(/^Evaluación de (.+)$/);
     if (evaluationTitle) return leading + `Evaluation of ${evaluationTitle[1]}` + trailing;

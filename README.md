@@ -9,6 +9,9 @@ Test domain: `performance.intercon.com.mx`
 - IC Admin branding assets and interim hero artwork applied.
 - English is the default interface language.
 - Feedback closure includes a manual Outlook Calendar link; no calendar event is created or saved by EDD. Existing meeting confirmation, agreement capture, and signature gates remain unchanged.
+- The Outlook action now opens a new event with the employee, review-cycle subject, and context prefilled; the manager still chooses the date/time and sends the invitation manually.
+- The Values and Attitude section visibly defines ESPÍRITU as Excellence, Service, Passion, Integrity, Respect, Innovation, Teamwork, and Unity.
+- The final calibration view compares the expected standard, calibrated employee result, area average, and company average on a common 0–100 scale.
 - Organizational Development (DO) replaces RH/HR in interface wording; existing data field identifiers are preserved.
 - The application is intentionally isolated in `demo` mode.
 - Local test access is available directly from the login screen (no email or real OTP). All identities are synthetic and demo data is stored under `edd_ic_admin_demo_db_v2` in this browser only; sessions use `edd_ic_admin_demo_session_v2`. Existing ICA/Mexico storage is not deleted.

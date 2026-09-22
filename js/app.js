@@ -490,6 +490,42 @@
   function h(strings) { return strings; } // noop, mantiene legibilidad de template literals
   function esc(str) { return String(str === null || str === undefined ? '' : str).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
   function f1(n) { return (n === null || n === undefined || isNaN(n)) ? '—' : Number(n).toFixed(1); }
+
+  function scoreOn100(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return null;
+    return n <= 5 ? n * 20 : n;
+  }
+
+  function averageScore(rows) {
+    const values = (rows || []).map((row) => scoreOn100(row)).filter((value) => value !== null);
+    return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
+  }
+
+  function renderCalibrationBenchmarks(values) {
+    const refs = [
+      { label:'Expected standard', value:scoreOn100(values.expected), className:'expected', note:'Reference level' },
+      { label:'Calibrated employee result', value:scoreOn100(values.individual), className:'individual', note:'Final individual result' },
+      { label:`${values.areaName || 'Area'} average`, value:scoreOn100(values.areaAverage), className:'area', note:values.areaCount ? `${values.areaCount} employees included` : 'Area reference' },
+      { label:'Company average', value:scoreOn100(values.companyAverage), className:'company', note:values.companyCount ? `${values.companyCount} employees included` : 'Company reference' }
+    ];
+    return `<section class="admin-panel calibration-benchmark-panel">
+      <div class="admin-panel-head"><div><span class="admin-section-kicker">FINAL CALIBRATION VIEW</span><h2>Individual and organizational comparison</h2><p class="panel-support-copy">Compare the final calibrated result with the expected standard, the employee's area, and the company overall.</p></div></div>
+      <div class="calibration-benchmark-chart">${refs.map((ref) => {
+        const width = ref.value === null ? 0 : Math.max(0, Math.min(100, ref.value));
+        return `<article class="calibration-benchmark-row ${ref.className}"><div class="calibration-benchmark-label"><strong>${esc(ref.label)}</strong><small>${esc(ref.note)}</small></div><div class="calibration-benchmark-track"><span style="width:${width}%"></span></div><b>${ref.value === null ? 'N/A' : f1(ref.value)}</b></article>`;
+      }).join('')}</div>
+      <p class="calibration-benchmark-footnote">Scores are shown on a 0–100 scale. Area and company averages use the available calibrated results for the current cycle.</p>
+    </section>`;
+  }
+
+  function outlookMeetingUrl(col, periodName) {
+    const subject = `Performance feedback meeting — ${col && col.nombre ? col.nombre : 'Employee'}`;
+    const body = `Performance feedback meeting for ${periodName || 'the current review cycle'}. Please select the date and time, invite the employee, and hold the meeting before confirming it in IC Admin.`;
+    const params = new URLSearchParams({ subject, body });
+    if (col && col.correoCorporativo) params.set('to', col.correoCorporativo);
+    return `https://outlook.office.com/calendar/0/deeplink/compose?${params.toString()}`;
+  }
   function pct(n) { return Math.max(0, Math.min(100, Math.round(n))); }
   function personalRoute(page) { return state.user && state.user.perfil === 'lider' ? '#/lider/mi-' + page : '#/colaborador/' + page; }
 
@@ -1608,6 +1644,7 @@
     const mapVal = {}; respuestas.forEach((r) => { mapVal[r.competenciaId] = r; });
     return `
     <p class="muted">${esc(meta.descripcion)}</p>
+    ${seccion === 'actitud' ? `<aside class="spirit-definition" aria-label="ESPÍRITU values definition"><strong>What does ESPÍRITU mean?</strong><span><b>E</b>xcellence · <b>S</b>ervice · <b>P</b>assion · <b>I</b>ntegrity · <b>R</b>espect · <b>I</b>nnovation · <b>T</b>eamwork · <b>U</b>nity</span></aside>` : ''}
     ${escalaHelpInline()}
     ${competencias.map((c) => renderCompetenciaCard(ev.id, seccion, c, mapVal[c.id], soloLectura)).join('')}
     `;
@@ -2648,7 +2685,7 @@
       <h3>Ubicación en la Matriz 9-Box</h3>
       ${ninaBoxHtml}
       <p class="muted">Estado actual del proceso: ${badge(estado)}. La calibración y liberación de retroalimentación las gestiona el administrador de DO.</p>
-      ${cal && cal.retroHabilitada ? `<section class="leader-release-card"><div class="feedback-signing-head"><div><span class="admin-section-kicker">CIERRE DE RETROALIMENTACIÓN</span><h3>Reunión, acuerdos y firma</h3><p>Confirma la reunión, ajusta los acuerdos si es necesario y libera la versión final antes de firmar.</p></div><div class="document-actions"><button class="btn btn-outline btn-sm" onclick="App.descargarRetroalimentacion('${colaboradorId}','${periodoId}')">Descargar constancia</button><button class="btn btn-outline btn-sm" onclick="App.imprimirRetroalimentacion('${colaboradorId}','${periodoId}')">Imprimir / Guardar PDF</button></div></div><div class="actions"><a class="btn btn-outline" href="https://outlook.office.com/calendar/" target="_blank" rel="noopener noreferrer">Agendar reunión en Outlook</a></div><p class="muted">Se abrirá el calendario de Outlook en otra pestaña. Agenda la reunión e invita al colaborador manualmente. EDD no guarda el evento; después confirma aquí que tuvieron la reunión y documenta los acuerdos.</p><label class="confirm-check"><input type="checkbox" ${cal.reunionLiderRealizada?'checked':''} ${cal.firmaLider?'disabled':''} onchange="App.confirmarReunionLider('${colaboradorId}','${periodoId}',this.checked)"/> Confirmo que ya realicé la reunión de retroalimentación con el colaborador.</label><label class="calibration-field" style="margin-top:14px"><span>Acuerdos finales de la reunión</span><textarea id="feedbackAgreements-${colaboradorId}" ${cal.acuerdosLiberados?'disabled':''} placeholder="Documenta compromisos, responsables y acuerdos finales...">${esc(cal.acuerdosFinales||'')}</textarea></label><div class="actions"><button class="btn btn-primary" ${cal.reunionLiderRealizada&&!cal.acuerdosLiberados&&!cal.firmaLider?'':'disabled'} onclick="App.liberarAcuerdos('${colaboradorId}','${periodoId}')">${cal.acuerdosLiberados?'✓ Acuerdos liberados':'Guardar y liberar acuerdos para firma'}</button></div><div class="signature-own-flow leader-signature-grid">${renderSignatureCard('lider',col,periodoId,cal,!cal.acuerdosLiberados?'Libera primero los acuerdos finales.':null)}${renderOtherPartySignatureStatus('colaborador',cal)}</div></section>` : ''}
+      ${cal && cal.retroHabilitada ? `<section class="leader-release-card"><div class="feedback-signing-head"><div><span class="admin-section-kicker">CIERRE DE RETROALIMENTACIÓN</span><h3>Reunión, acuerdos y firma</h3><p>Confirma la reunión, ajusta los acuerdos si es necesario y libera la versión final antes de firmar.</p></div><div class="document-actions"><button class="btn btn-outline btn-sm" onclick="App.descargarRetroalimentacion('${colaboradorId}','${periodoId}')">Descargar constancia</button><button class="btn btn-outline btn-sm" onclick="App.imprimirRetroalimentacion('${colaboradorId}','${periodoId}')">Imprimir / Guardar PDF</button></div></div><div class="actions"><a class="btn btn-outline" href="${esc(outlookMeetingUrl(col,state.periodo&&state.periodo.nombre))}" target="_blank" rel="noopener noreferrer">Agendar reunión en Outlook</a></div><p class="muted">Se abrirá un evento nuevo de Outlook en otra pestaña con el asunto y el contexto prellenados. Selecciona la fecha y hora, confirma al invitado y envía la invitación. EDD no guarda el evento; después confirma aquí que tuvieron la reunión y documenta los acuerdos.</p><label class="confirm-check"><input type="checkbox" ${cal.reunionLiderRealizada?'checked':''} ${cal.firmaLider?'disabled':''} onchange="App.confirmarReunionLider('${colaboradorId}','${periodoId}',this.checked)"/> Confirmo que ya realicé la reunión de retroalimentación con el colaborador.</label><label class="calibration-field" style="margin-top:14px"><span>Acuerdos finales de la reunión</span><textarea id="feedbackAgreements-${colaboradorId}" ${cal.acuerdosLiberados?'disabled':''} placeholder="Documenta compromisos, responsables y acuerdos finales...">${esc(cal.acuerdosFinales||'')}</textarea></label><div class="actions"><button class="btn btn-primary" ${cal.reunionLiderRealizada&&!cal.acuerdosLiberados&&!cal.firmaLider?'':'disabled'} onclick="App.liberarAcuerdos('${colaboradorId}','${periodoId}')">${cal.acuerdosLiberados?'✓ Acuerdos liberados':'Guardar y liberar acuerdos para firma'}</button></div><div class="signature-own-flow leader-signature-grid">${renderSignatureCard('lider',col,periodoId,cal,!cal.acuerdosLiberados?'Libera primero los acuerdos finales.':null)}${renderOtherPartySignatureStatus('colaborador',cal)}</div></section>` : ''}
     </div>`;
   }
 
@@ -3061,6 +3098,18 @@
         const calibrationDone = item.calibrationStatus === 'calibration_completed';
         const calibrationDraft = item.calibrationStatus === 'calibration_draft';
         const currentCalibrated = item.calibratedResult != null ? Number(item.calibratedResult) : Number(item.leaderResult);
+        const calibrationPopulation = [...(q.pending||[]), ...(q.calibrated||[]), ...(q.closed||[])];
+        const companyScores = calibrationPopulation.map(x => x.calibratedResult ?? x.leaderResult);
+        const areaPopulation = calibrationPopulation.filter(x => String(x.area||'').trim() === String(item.area||'').trim());
+        const benchmarkHtml = renderCalibrationBenchmarks({
+          expected:100,
+          individual:currentCalibrated,
+          areaName:item.area || 'Area',
+          areaAverage:averageScore(areaPopulation.map(x => x.calibratedResult ?? x.leaderResult)),
+          areaCount:areaPopulation.map(x => scoreOn100(x.calibratedResult ?? x.leaderResult)).filter(x => x !== null).length,
+          companyAverage:averageScore(companyScores),
+          companyCount:companyScores.map(scoreOn100).filter(x => x !== null).length
+        });
         const reason = item.adjustmentReason || '';
         const answers = detailReady ? (detail.answers||[]) : [];
         const objectives = detailReady ? (detail.objectives||[]) : [];
@@ -3131,6 +3180,7 @@
           <div class="calibration-profile-hero"><div class="calibration-avatar large">${esc(item.name||'').split(' ').slice(0,2).map(v=>v[0]).join('')}</div><div class="calibration-profile-copy"><span class="admin-kicker">EXPEDIENTE EJECUTIVO DE CALIBRACIÓN</span><h1>${esc(item.name||item.employeeId)}</h1><p>${esc(item.position||'')} · ${esc(item.area||'')}</p><div class="calibration-meta"><span>Líder: <b>${esc(item.leaderName||'—')}</b></span><span>Periodo: <b>${esc(item.periodId||periodoId)}</b></span><span>ID: <b>${esc(item.employeeId)}</b></span></div></div><div class="calibration-final-score"><span>Resultado líder</span><strong>${f1(item.leaderResult)}</strong>${badge(calibrationDone?'Calibrada':calibrationDraft?'Calibración en borrador':'Pendiente de calibración', calibrationDone?'green':calibrationDraft?'blue':'yellow')}</div></div>
 
           <div class="calibration-score-grid"><div class="calibration-score-card"><span>Autoevaluación</span><strong>${f1(item.selfResult)}</strong><small>Percepción colaborador</small></div><div class="calibration-score-card"><span>Evaluación líder</span><strong>${f1(item.leaderResult)}</strong><small>Base de calibración</small></div><div class="calibration-score-card ${gap!=null&&Math.abs(gap)>=1?'attention':''}"><span>Brecha auto vs líder</span><strong>${gap==null?'—':(gap>0?'+':'')+f1(gap)}</strong><small>Diferencia global</small></div><div class="calibration-score-card success"><span>Resultado calibrado</span><strong>${item.calibratedResult==null?'—':f1(item.calibratedResult)}</strong><small>${calibrationDone?'Completada':calibrationDraft?'Borrador':'Pendiente'}</small></div></div>
+          ${benchmarkHtml}
 
           ${!detailReady?`<article class="admin-panel calibration-loading-detail ${state.remote.detailError?'has-error':''}">${state.remote.detailError?'':`<div class="backend-spinner"></div>`}<div><span class="admin-section-kicker">${state.remote.detailError?'EXPEDIENTE NO DISPONIBLE':'CARGANDO EXPEDIENTE'}</span><h2>${state.remote.detailError?'No pudimos cargar el detalle completo':'Recuperando respuestas, objetivos y contexto del líder…'}</h2><p>${state.remote.detailError?esc(state.remote.detailError):'La información estará disponible en cuanto finalice la carga.'}</p>${state.remote.detailError?`<button class="btn btn-primary btn-sm" onclick="App.reintentarDetalleCalibracion('${esc(item.employeeId)}','${esc(item.evaluationId)}')">Reintentar cargar expediente</button>`:''}</div></article>`:`
           <section class="performance-profile-section calibration-performance-profile remote-performance-profile">
@@ -3186,6 +3236,17 @@
     const ninaBoxHtml = global.EDDCharts.renderNineBoxIndividual({actitudProm: resLider?.promedios?.actitud, desempenoProm: resLider?.promedios?.desempeno, nombreColaborador: col.nombre});
     const iniciales = esc(col.nombre).split(' ').slice(0,2).map(x=>x[0]).join('');
     const resultadoActual = cal.resultadoCalibrado !== undefined ? cal.resultadoCalibrado : resLider?.puntajes?.total;
+    const benchmarkPopulation = datosGlobales(periodoId).filter(d => d.totalFinal !== null && d.totalFinal !== undefined);
+    const benchmarkArea = benchmarkPopulation.filter(d => String(d.c.area||'').trim() === String(col.area||'').trim());
+    const benchmarkHtml = renderCalibrationBenchmarks({
+      expected:100,
+      individual:resultadoActual,
+      areaName:col.area || 'Area',
+      areaAverage:averageScore(benchmarkArea.map(d => d.totalFinal)),
+      areaCount:benchmarkArea.length,
+      companyAverage:averageScore(benchmarkPopulation.map(d => d.totalFinal)),
+      companyCount:benchmarkPopulation.length
+    });
 
     return `<section class="calibration-shell calibration-detail-shell">
       <a href="#/admin/calibracion" class="calibration-back">← Volver a calibración</a>
@@ -3201,6 +3262,7 @@
         <div class="calibration-score-card ${Math.abs(diferencia)>=10?'attention':''}"><span>Brecha auto vs líder</span><strong>${diferencia>0?'+':''}${f1(diferencia)}</strong><small>${esc(brechaGeneral.etiqueta)}</small></div>
         <div class="calibration-score-card success"><span>Resultado calibrado</span><strong>${f1(resultadoActual)}</strong><small>${cal.resultadoCalibrado!==undefined?'Guardado por DO':'Sin ajuste aún'}</small></div>
       </div>
+      ${benchmarkHtml}
 
       <section class="performance-profile-section calibration-performance-profile">
         <div class="performance-profile-head"><div><span class="admin-section-kicker">LECTURA MULTIDIMENSIONAL</span><h2>Perfil de desempeño vs. ideal</h2><p>La misma lectura utilizada en la comparación de la evaluación: muestra la percepción del colaborador, la evaluación del líder y la distancia de cada competencia frente al ideal esperado de 5/5.</p></div></div>
@@ -4294,6 +4356,10 @@
     limpiarFiltrosJerarquias() { state.jerarquiasFiltros = {}; render(); }
   };
 
+  // Expose the consolidated legacy catalog to the single DOM translator.
+  // This keeps dynamically rendered labels covered without reintroducing
+  // competing observers or partial word replacement.
+  global.EDDInlineEnglish = EN;
   global.App = Actions;
   function applyDeclaredRatingAction(action, value) {
     const match = String(action || '').match(/^App\.(rate|rateHerramienta)\('([^']*)','([^']*)','([^']*)',this\.value\)$/);
