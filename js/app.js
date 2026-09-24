@@ -545,7 +545,10 @@
     const caps = user.capabilities || {};
     const base = String(user.perfil || '').toLowerCase();
     const perfiles = [];
-    const esAdmin = capBool(caps, ['isAdmin','canAdminister','canManage','canCalibrate']) || base === 'administrador';
+    // canManage is a leader/team capability, not an administrator capability.
+    // Treating it as admin promoted every leader to Admin and could leave the
+    // local UAT router in an invalid profile/route loop after login.
+    const esAdmin = capBool(caps, ['isAdmin','canAdminister','canCalibrate','canViewAllEvaluations']) || base === 'administrador';
     const esLider = capBool(caps, ['canEvaluate','canEvaluateTeam','canLead','isLeader']) || base === 'lider';
     const esColaborador = capBool(caps, ['canSelfEvaluate','canSelfAssess','canSelfEvaluation','requiresEvaluation']) || base === 'colaborador';
     if (esAdmin) perfiles.push('administrador');
