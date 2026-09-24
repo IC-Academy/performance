@@ -2236,7 +2236,7 @@
    */
   function viewRetroalimentacion(col, periodoId, estado) {
     if (estado !== D.ESTADOS.RETRO_PENDIENTE && estado !== D.ESTADOS.CERRADA) {
-      return `<div class="card"><h2>Retroalimentación</h2><p class="muted">Tu retroalimentación aún no está disponible. Estado actual: ${badge(estado)}</p></div>`;
+      return `<div class="card"><h2>Feedback</h2><p class="muted">Your feedback is not available yet. Current status: ${badge(estado)}</p></div>`;
     }
     const cal = S.getCalibracion(col.empleado, periodoId);
     const liderEval = S.getEvaluacion(col.empleado, periodoId, 'lider');
