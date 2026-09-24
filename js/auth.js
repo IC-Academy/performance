@@ -141,13 +141,9 @@
       return resp;
     }
 
-    const access = cfg().restrictedAccess || {};
+    const access = (cfg().localDemoUsers || {})[numeroEmpleado];
     const digest = await sha256Hex(numeroEmpleado + ':' + codigo);
-    if (numeroEmpleado !== String(access.employeeNumber || '') || digest !== access.credentialHash) {
-      throw new global.EDDApi.ApiError('invalid_credentials', 'Usuario o contraseña incorrectos.');
-    }
-    const u = global.EDDStorage.getUsuario(numeroEmpleado);
-    if (!u) {
+    if (!access || digest !== access.credentialHash) {
       throw new global.EDDApi.ApiError('invalid_credentials', 'Usuario o contraseña incorrectos.');
     }
     const expiresIn = cfg().defaultSessionSeconds;
@@ -156,19 +152,11 @@
       expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString(),
       user: {
         numeroEmpleado,
-        nombreCompleto: access.displayName || u.nombre,
-        rol: access.role || 'Administrador',
+        nombreCompleto: access.displayName,
+        rol: access.role,
         puesto: access.position || '',
         area: access.area || '',
-        capabilities: {
-          isAdmin: true,
-          canAdminister: true,
-          canManage: true,
-          canCalibrate: true,
-          canViewAllEvaluations: true,
-          canEvaluate: false,
-          canSelfEvaluate: false
-        }
+        capabilities: Object.assign({}, access.capabilities || {})
       }
     };
     guardarSesion(session);
@@ -259,19 +247,9 @@
     // API sessions remain governed exclusively by /auth/me capabilities.
     if (cfg().mode === 'demo') {
       const employeeId = String(session.user.numeroEmpleado || '');
-      const restrictedId = String((cfg().restrictedAccess && cfg().restrictedAccess.employeeNumber) || '');
-      if (employeeId === restrictedId) {
-        caps.isAdmin = true;
-        caps.canAdminister = true;
-        caps.canManage = true;
-        caps.canCalibrate = true;
-        caps.canViewAllEvaluations = true;
-        caps.canEvaluate = false;
-        caps.canSelfEvaluate = false;
-      } else {
-        caps.isAdmin = false;
-        caps.canEvaluate = false;
-        caps.canSelfEvaluate = false;
+      const localAccess = (cfg().localDemoUsers || {})[employeeId];
+      if (localAccess && localAccess.capabilities) {
+        Object.assign(caps, localAccess.capabilities);
       }
     }
     const rolNormalizado = String(session.user.rol || '').toLowerCase();
