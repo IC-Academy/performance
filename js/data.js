@@ -42,45 +42,45 @@
       {
         id: 'A1', nombre: 'Compromiso Organizacional (Integridad y Excelencia)', peso: 8,
         conductas: [
-          'Actúa conforme a los valores ESPÍRITU de Inter-Con.',
-          'Muestra responsabilidad y ética profesional.',
-          'Se involucra activamente en los objetivos de la empresa.',
-          'Es puntual, constante y cumple los compromisos que asume.'
+          'Acts in accordance with Inter-Con's ESPÍRITU values.',
+          'Demonstrates responsibility and professional ethics.',
+          'Actively contributes to the company's objectives.',
+          'Is punctual, consistent, and fulfills commitments.'
         ]
       },
       {
         id: 'A2', nombre: 'Actitud de Servicio (Pasión y Respeto)', peso: 8,
         conductas: [
-          'Atiende oportunamente las solicitudes de clientes internos y externos.',
-          'Demuestra disposición y pasión para apoyar a otros.',
-          'Actúa con profesionalismo, respeto y empatía.'
+          'Responds promptly to requests from internal and external clients.',
+          'Demonstrates willingness and passion to support others.',
+          'Acts with professionalism, respect, and empathy.'
         ]
       },
       {
         id: 'A3', nombre: 'Trabajo en Equipo, Unión y Desarrollo de Otros', peso: 8,
         conductas: [
-          'Colabora con otras áreas para lograr objetivos comunes.',
-          'Mantiene relaciones laborales basadas en el respeto y contribuye a resolver diferencias de manera constructiva.',
-          'Comparte conocimientos y brinda apoyo cuando otros lo requieren.',
-          'Favorece un ambiente de aprendizaje y colaboración.'
+          'Collaborates across areas to achieve shared objectives.',
+          'Maintains respectful working relationships and helps resolve differences constructively.',
+          'Shares knowledge and provides support when others need it.',
+          'Fosters a learning and collaborative environment.'
         ]
       },
       {
         id: 'A4', nombre: 'Comunicación Efectiva y Apertura', peso: 8,
         conductas: [
-          'Se comunica de forma clara, respetuosa y oportuna.',
-          'Escucha activamente y considera diferentes puntos de vista.',
-          'Comparte información relevante para facilitar el trabajo de los demás.',
-          'Recibe la retroalimentación con disposición para mejorar.'
+          'Communicates clearly, respectfully, and promptly.',
+          'Listens actively and considers different points of view.',
+          'Shares relevant information to help others perform their work.',
+          'Receives feedback with a willingness to improve.'
         ]
       },
       {
         id: 'A5', nombre: 'Adaptabilidad, Iniciativa y Compromiso con la Sustentabilidad', peso: 8,
         conductas: [
-          'Se adapta positivamente a cambios y nuevas prioridades.',
-          'Propone ideas para mejorar procesos y toma la iniciativa cuando es necesario.',
-          'Hace uso responsable de los recursos materiales y energéticos a su cargo.',
-          'Promueve prácticas de cuidado ambiental y ahorro de recursos en su área de trabajo.'
+          'Adapts positively to change and new priorities.',
+          'Proposes ideas to improve processes and takes initiative when necessary.',
+          'Uses assigned material and energy resources responsibly.',
+          'Promotes environmental care and resource-saving practices in the workplace.'
         ]
       }
     ],
@@ -88,17 +88,17 @@
       {
         id: 'B1', nombre: 'Dominio del Puesto', peso: 6,
         conductas: [
-          'Aplica correctamente los conocimientos técnicos y normativos de su puesto.',
-          'Resuelve problemas relacionados con sus funciones.',
-          'Mantiene actualizados sus conocimientos técnicos y las herramientas propias de su puesto.'
+          'Correctly applies the technical and regulatory knowledge required for the role.',
+          'Solves problems related to their responsibilities.',
+          'Keeps technical knowledge and role-specific tools up to date.'
         ]
       },
       {
         id: 'B2', nombre: 'Procesos y Herramientas de Trabajo', peso: 6,
         conductas: [
-          'Conoce y aplica correctamente los procesos, políticas y procedimientos de su área.',
-          'Utiliza con eficiencia las herramientas y sistemas aplicables a su puesto: Salesforce, Paycom, Concur, Excel, SharePoint, Planner, PowerPoint, IQ-iconiq u otros.',
-          'Considera el cuadro de apoyo de herramientas para determinar el nivel de dominio aplicable al puesto.'
+          'Understands and correctly applies the processes, policies, and procedures of their area.',
+          'Efficiently uses the tools and systems applicable to the role: Salesforce, Paycom, Concur, Excel, SharePoint, Planner, PowerPoint, IQ-iconiq, or others.',
+          'Uses the tools reference guide to determine the proficiency level applicable to the role.'
         ]
       },
       {
