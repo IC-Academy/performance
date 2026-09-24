@@ -45,13 +45,15 @@
     // nunca se guarda en texto plano: auth.js compara SHA-256 de
     // "numeroEmpleado:contraseña". Este control es solo para el entorno
     // estático de revisión; producción deberá usar OTP o Entra ID SSO.
-    restrictedAccess: {
-      employeeNumber: '10001',
-      credentialHash: '8f514a1e651defbcc839529b02e7bb45efddb7c3cf08cf900629bdcebab4d1c1',
-      displayName: 'Gabriel Sabogal',
-      role: 'Administrador',
-      position: 'VP Corporate LATAM / Managing Director México',
-      area: 'Dirección General'
+    // Accesos UAT locales y desconectados. Solo se almacenan hashes SHA-256
+    // de numeroEmpleado:PIN; los PIN en claro no viven en el repositorio.
+    // Este mecanismo se elimina al activar OTP/SSO.
+    localDemoUsers: {
+      '267476': { credentialHash: '05195b438afd0cf63f78f5a3a95e23a34637cfa628233a994fab732e88fed219', displayName: 'José Antonio García Santiago', role: 'Colaborador', position: 'Officer Success Representative', area: 'Officer Success Department', capabilities: { isAdmin:false, canAdminister:false, canManage:false, canCalibrate:false, canViewAllEvaluations:false, canEvaluate:false, canSelfEvaluate:true } },
+      '266885': { credentialHash: 'f4a8fc53066ee30a23f76e427a5dee1ba85c0461ebf19149547026b1b02d05b5', displayName: 'Sara Margarita Santos Ochoa', role: 'Administrador', position: 'Project Operations Manager', area: 'Data Analytics', capabilities: { isAdmin:true, canAdminister:true, canManage:true, canCalibrate:true, canViewAllEvaluations:true, canEvaluate:true, canSelfEvaluate:true } },
+      '257270': { credentialHash: 'a50528c34230226f582c3569de1aaf0c5c1b4af89c1f916ff0772b2c231be79a', displayName: 'Deysi Salas Figueroa', role: 'Colaborador', position: 'Employee Assistance Team Lead', area: 'Employee Assistance / People Operations', capabilities: { isAdmin:false, canAdminister:false, canManage:false, canCalibrate:false, canViewAllEvaluations:false, canEvaluate:false, canSelfEvaluate:true } },
+      '267465': { credentialHash: '536c809e128b434d7fe2efd0eb91e9e99ec018fa5b57024d261c53807ffbc8aa', displayName: 'Gonzalo Rafael Peña Ortiz', role: 'Líder', position: 'Bill Specialist', area: 'Strategic Operations', capabilities: { isAdmin:false, canAdminister:false, canManage:true, canCalibrate:false, canViewAllEvaluations:false, canEvaluate:true, canSelfEvaluate:true } },
+      '260901': { credentialHash: 'cbcba44f719149c8cace431d38f27b46a8ae7e61c93a1a86eb4e8bb1305e238c', displayName: 'Alejandro Herrera Leal', role: 'Líder', position: 'Supply Chain Senior Specialist III', area: 'Supply Chain', capabilities: { isAdmin:false, canAdminister:false, canManage:true, canCalibrate:false, canViewAllEvaluations:false, canEvaluate:true, canSelfEvaluate:true } }
     },
 
     // Base de los webhooks de n8n. Sustituir por la URL real del entorno
@@ -63,7 +65,7 @@
     // token no debe sobrevivir a que el usuario cierre la pestaña/navegador.
     // Nueva clave para invalidar inmediatamente cualquier sesión creada por
     // los accesos demo anteriores.
-    sessionStorageKey: 'edd_ic_admin_restricted_session_v1',
+    sessionStorageKey: 'edd_ic_admin_local_uat_session_v2',
 
     // Tiempo máximo (ms) que api.js espera una respuesta antes de abortar la
     // petición y mostrar "Error de conexión".
