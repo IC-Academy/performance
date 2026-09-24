@@ -268,7 +268,8 @@
     if (!session) return null;
     const rawCaps = session.user.capabilities || {};
     const caps = Object.assign({}, rawCaps, {
-      isAdmin: rawCaps.isAdmin === true || rawCaps.canAdminister === true || rawCaps.canManage === true || rawCaps.canCalibrate === true,
+      // canManage is a leader/team-management capability, not an Admin grant.
+      isAdmin: rawCaps.isAdmin === true || rawCaps.canAdminister === true || rawCaps.canCalibrate === true || rawCaps.canViewAllEvaluations === true,
       canEvaluate: rawCaps.canEvaluate === true || rawCaps.canEvaluateTeam === true || rawCaps.canLead === true || rawCaps.isLeader === true,
       canSelfEvaluate: rawCaps.canSelfEvaluate === true || rawCaps.canSelfAssess === true || rawCaps.canSelfEvaluation === true || rawCaps.requiresEvaluation === true
     });
