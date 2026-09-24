@@ -164,6 +164,35 @@
     return { success: true, token: session.token, expiresIn, user: session.user };
   }
 
+  async function loginLocalCredentials(numeroEmpleado, codigo) {
+    numeroEmpleado = String(numeroEmpleado || '').trim();
+    codigo = String(codigo || '').trim();
+    if (!/^\d{4,10}$/.test(numeroEmpleado) || !/^\d{6}$/.test(codigo)) {
+      throw new global.EDDApi.ApiError('invalid_credentials', 'Usuario o contraseña incorrectos.');
+    }
+    const access = (cfg().localDemoUsers || {})[numeroEmpleado];
+    const digest = await sha256Hex(numeroEmpleado + ':' + codigo);
+    if (!access || digest !== access.credentialHash) {
+      throw new global.EDDApi.ApiError('invalid_credentials', 'Usuario o contraseña incorrectos.');
+    }
+    const expiresIn = cfg().defaultSessionSeconds;
+    const session = {
+      token: generarTokenDemo(),
+      expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString(),
+      user: {
+        numeroEmpleado,
+        nombreCompleto: access.displayName,
+        rol: access.role,
+        puesto: access.position || '',
+        area: access.area || '',
+        capabilities: Object.assign({}, access.capabilities || {})
+      }
+    };
+    guardarSesion(session);
+    pendiente = null;
+    return { success: true, token: session.token, expiresIn, user: session.user };
+  }
+
   function detalleUsuarioDemo(u) {
     if (u.perfil === 'colaborador') { const c = global.EDDStorage.getColaborador(u.empleado); return { puesto: c ? c.puesto : '', area: c ? c.area : '' }; }
     if (u.perfil === 'lider') { const l = global.EDDStorage.getLider(u.empleado); return { puesto: l ? l.puesto : '', area: l ? l.area : '' }; }
@@ -293,7 +322,7 @@
   });
 
   global.EDDAuth = {
-    requestCode, verifyCode, getSession, clearSession, getAppUser, getToken, logout, refreshProfileFromApi,
+    requestCode, verifyCode, loginLocalCredentials, getSession, clearSession, getAppUser, getToken, logout, refreshProfileFromApi,
     maskEmail, pendienteActual, limpiarPendiente,
     ROL_INTERNO_A_API
   };
