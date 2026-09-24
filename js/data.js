@@ -104,25 +104,25 @@
       {
         id: 'B3', nombre: 'Orientación a Resultados y Calidad', peso: 6,
         conductas: [
-          'Cumple consistentemente los objetivos y estándares establecidos.',
-          'Mantiene altos estándares de calidad y precisión en su trabajo.',
-          'Propone acciones para mejorar la productividad y la eficiencia.'
+          'Consistently meets established goals and standards.',
+          'Maintains high standards of quality and accuracy in their work.',
+          'Proposes actions to improve productivity and efficiency.'
         ]
       },
       {
         id: 'B4', nombre: 'Planeación y Organización', peso: 6,
         conductas: [
-          'Organiza adecuadamente sus actividades y prioridades.',
-          'Cumple los plazos establecidos.',
-          'Anticipa riesgos y establece acciones preventivas.'
+          'Organizes activities and priorities effectively.',
+          'Meets established deadlines.',
+          'Anticipates risks and establishes preventive actions.'
         ]
       },
       {
         id: 'B5', nombre: 'Seguimiento, Control y Uso de Recursos', peso: 6,
         conductas: [
-          'Da seguimiento oportuno a sus actividades y compromisos.',
-          'Cumple políticas y procedimientos internos, así como los requisitos de la documentación a su cargo.',
-          'Administra adecuadamente los recursos asignados.'
+          'Follows up on activities and commitments in a timely manner.',
+          'Complies with internal policies, procedures, and assigned documentation requirements.',
+          'Manages assigned resources appropriately.'
         ]
       }
     ],
