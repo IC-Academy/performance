@@ -3670,7 +3670,9 @@
         S.addAudit(appUser.nombre, 'Inicio de sesión', 'usuarios', appUser.empleado, null, appUser.perfil);
         resetLoginState('solicitar');
         resetRemoteForProfile();
-        irAHomeDePerfil('administrador');
+        const perfiles = perfilesDisponibles(appUser);
+        if (perfiles.length > 1) navigate('#/perfil');
+        else irAHomeDePerfil(state.user.perfil);
       } catch (err) {
         console.error('Error al iniciar sesión', err);
         state.login.loading = false;
