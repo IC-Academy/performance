@@ -42,9 +42,9 @@
       {
         id: 'A1', nombre: 'Compromiso Organizacional (Integridad y Excelencia)', peso: 8,
         conductas: [
-          'Acts in accordance with Inter-Con's ESPÍRITU values.',
+          "Acts in accordance with Inter-Con's ESPÍRITU values.",
           'Demonstrates responsibility and professional ethics.',
-          'Actively contributes to the company's objectives.',
+          "Actively contributes to the company's objectives.",
           'Is punctual, consistent, and fulfills commitments.'
         ]
       },
