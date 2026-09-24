@@ -3665,8 +3665,16 @@
       state.login.numeroEmpleado = numeroEmpleado;
       render();
       try {
-        await A.requestCode(numeroEmpleado);
-        await A.verifyCode(numeroEmpleado, password);
+        // Local UAT login must not depend on the legacy OTP/request-code
+        // handshake. Validate the employee + PIN directly so the static demo
+        // cannot remain indefinitely in "Validating..." because of stale
+        // challenge state.
+        if (global.APP_CONFIG.mode !== 'api' && A.loginLocalCredentials) {
+          await A.loginLocalCredentials(numeroEmpleado, password);
+        } else {
+          await A.requestCode(numeroEmpleado);
+          await A.verifyCode(numeroEmpleado, password);
+        }
         const appUser = A.getAppUser();
         limpiarPerfil(appUser);
         state.user = aplicarPerfilSeleccionado(appUser);
