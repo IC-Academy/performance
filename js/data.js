@@ -180,11 +180,15 @@
     { empleado: '20002', nombre: 'Ana Torres', puesto: 'Gerente de Finanzas', area: 'Finanzas', ciudad: 'Guadalajara', correoCorporativo: 'ana.torres@intercon.com.mx', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-07-20' },
     { empleado: '20003', nombre: 'Roberto Díaz', puesto: 'Gerente de Operaciones', area: 'Operaciones', ciudad: 'Monterrey', correoCorporativo: 'roberto.diaz@intercon.com.mx', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-07-20' },
     { empleado: '20004', nombre: 'Sofía López', puesto: 'Gerente de Tecnología', area: 'Tecnología', ciudad: 'Ciudad de México', correoCorporativo: 'sofia.lopez@intercon.com.mx', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-07-20' },
-    { empleado: '20005', nombre: 'Miguel Ángel Ruiz', puesto: 'Gerente Comercial', area: 'Comercial', ciudad: 'Puebla', correoCorporativo: 'miguel.ruiz@intercon.com.mx', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-07-20' }
+    { empleado: '20005', nombre: 'Miguel Ángel Ruiz', puesto: 'Gerente Comercial', area: 'Comercial', ciudad: 'Puebla', correoCorporativo: 'miguel.ruiz@intercon.com.mx', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-07-20' },
+    { empleado: '267465', nombre: 'Gonzalo Rafael Peña Ortiz', puesto: 'Bill Specialist', area: 'Strategic Operations', ciudad: '', correoCorporativo: 'gpena@icsecurity.com', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-24', registroPrueba: true },
+    { empleado: '260901', nombre: 'Alejandro Herrera Leal', puesto: 'Supply Chain Senior Specialist III', area: 'Supply Chain', ciudad: '', correoCorporativo: 'alherrera@icsecurity.com', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-24', registroPrueba: true },
+    { empleado: '266885', nombre: 'Sara Margarita Santos Ochoa', puesto: 'Project Operations Manager', area: 'Data Analytics', ciudad: '', correoCorporativo: 'ssantos@icsecurity.com', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-24', registroPrueba: true }
   ];
 
   const ADMINISTRADORES = [
-    { empleado: '10001', nombre: 'Gabriel Sabogal', puesto: 'VP Corporate LATAM / Managing Director México', area: 'Dirección General', correoCorporativo: '', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-22' }
+    { empleado: '10001', nombre: 'Gabriel Sabogal', puesto: 'VP Corporate LATAM / Managing Director México', area: 'Dirección General', correoCorporativo: '', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-22' },
+    { empleado: '266885', nombre: 'Sara Margarita Santos Ochoa', puesto: 'Project Operations Manager', area: 'Data Analytics', correoCorporativo: 'ssantos@icsecurity.com', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-24', registroPrueba: true }
   ];
 
   // perfilObjetivo: valores de referencia (1-5) usados por el generador de respuestas
@@ -207,7 +211,12 @@
     // maestro (ver requerimiento 18 del brief — "Sin líder asignado"). No
     // afecta ningún escenario previo: su evaluación sigue "no_iniciada" y no
     // participa en flujos de líder/comparación/calibración.
-    { empleado: '10011', nombre: 'Mario Castillo', puesto: 'Analista Junior de Operaciones', area: 'Operaciones', liderId: null, antiguedad: '3 meses', ciudad: 'Monterrey', direccion: 'Dirección de Operaciones', estadoDemo: 'no_iniciada', correoCorporativo: null, estatusEmpleado: 'Activo', correoValidado: false, ultimaActualizacion: '2026-07-25' }
+    { empleado: '10011', nombre: 'Mario Castillo', puesto: 'Analista Junior de Operaciones', area: 'Operaciones', liderId: null, antiguedad: '3 meses', ciudad: 'Monterrey', direccion: 'Dirección de Operaciones', estadoDemo: 'no_iniciada', correoCorporativo: null, estatusEmpleado: 'Activo', correoValidado: false, ultimaActualizacion: '2026-07-25' },
+    { empleado: '267476', nombre: 'José Antonio García Santiago', puesto: 'Officer Success Representative', area: 'Officer Success Department', liderId: null, antiguedad: 'Demo', ciudad: '', direccion: 'IC Admin', estadoDemo: 'no_iniciada', correoCorporativo: 'josgarcia@icsecurity.com', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-24', registroPrueba: true },
+    { empleado: '257270', nombre: 'Deysi Salas Figueroa', puesto: 'Employee Assistance Team Lead', area: 'Employee Assistance / People Operations', liderId: null, antiguedad: 'Demo', ciudad: '', direccion: 'IC Admin', estadoDemo: 'no_iniciada', correoCorporativo: 'dsalas@icsecurity.com', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-24', registroPrueba: true },
+    { empleado: '267465', nombre: 'Gonzalo Rafael Peña Ortiz', puesto: 'Bill Specialist', area: 'Strategic Operations', liderId: null, antiguedad: 'Demo', ciudad: '', direccion: 'IC Admin', estadoDemo: 'no_iniciada', correoCorporativo: 'gpena@icsecurity.com', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-24', registroPrueba: true },
+    { empleado: '260901', nombre: 'Alejandro Herrera Leal', puesto: 'Supply Chain Senior Specialist III', area: 'Supply Chain', liderId: null, antiguedad: 'Demo', ciudad: '', direccion: 'IC Admin', estadoDemo: 'no_iniciada', correoCorporativo: 'alherrera@icsecurity.com', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-24', registroPrueba: true },
+    { empleado: '266885', nombre: 'Sara Margarita Santos Ochoa', puesto: 'Project Operations Manager', area: 'Data Analytics', liderId: null, antiguedad: 'Demo', ciudad: '', direccion: 'IC Admin', estadoDemo: 'no_iniciada', correoCorporativo: 'ssantos@icsecurity.com', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-24', registroPrueba: true }
   ];
 
   // ===========================================================================
