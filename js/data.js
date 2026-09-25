@@ -183,12 +183,14 @@
     { empleado: '20005', nombre: 'Miguel Ángel Ruiz', puesto: 'Gerente Comercial', area: 'Comercial', ciudad: 'Puebla', correoCorporativo: 'miguel.ruiz@intercon.com.mx', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-07-20' },
     { empleado: '267465', nombre: 'Gonzalo Rafael Peña Ortiz', puesto: 'Bill Specialist', area: 'Strategic Operations', ciudad: '', correoCorporativo: 'gpena@icsecurity.com', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-24', registroPrueba: true },
     { empleado: '260901', nombre: 'Alejandro Herrera Leal', puesto: 'Supply Chain Senior Specialist III', area: 'Supply Chain', ciudad: '', correoCorporativo: 'alherrera@icsecurity.com', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-24', registroPrueba: true },
-    { empleado: '266885', nombre: 'Sara Margarita Santos Ochoa', puesto: 'Project Operations Manager', area: 'Data Analytics', ciudad: '', correoCorporativo: 'ssantos@icsecurity.com', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-24', registroPrueba: true }
+    { empleado: '266885', nombre: 'Sara Margarita Santos Ochoa', puesto: 'Project Operations Manager', area: 'Data Analytics', ciudad: '', correoCorporativo: 'ssantos@icsecurity.com', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-24', registroPrueba: true },
+    { empleado: '990001', nombre: 'Monserrat Cayon', puesto: 'UAT Full-Cycle Reviewer', area: 'IC Admin', ciudad: '', correoCorporativo: '', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-25', registroPrueba: true }
   ];
 
   const ADMINISTRADORES = [
     { empleado: '10001', nombre: 'Gabriel Sabogal', puesto: 'VP Corporate LATAM / Managing Director México', area: 'Dirección General', correoCorporativo: '', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-22' },
-    { empleado: '266885', nombre: 'Sara Margarita Santos Ochoa', puesto: 'Project Operations Manager', area: 'Data Analytics', correoCorporativo: 'ssantos@icsecurity.com', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-24', registroPrueba: true }
+    { empleado: '266885', nombre: 'Sara Margarita Santos Ochoa', puesto: 'Project Operations Manager', area: 'Data Analytics', correoCorporativo: 'ssantos@icsecurity.com', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-24', registroPrueba: true },
+    { empleado: '990001', nombre: 'Monserrat Cayon', puesto: 'UAT Full-Cycle Reviewer', area: 'IC Admin', correoCorporativo: '', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-25', registroPrueba: true }
   ];
 
   // perfilObjetivo: valores de referencia (1-5) usados por el generador de respuestas
@@ -216,7 +218,8 @@
     { empleado: '257270', nombre: 'Deysi Salas Figueroa', puesto: 'Employee Assistance Team Lead', area: 'Employee Assistance / People Operations', liderId: null, antiguedad: 'Demo', ciudad: '', direccion: 'IC Admin', estadoDemo: 'no_iniciada', correoCorporativo: 'dsalas@icsecurity.com', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-24', registroPrueba: true },
     { empleado: '267465', nombre: 'Gonzalo Rafael Peña Ortiz', puesto: 'Bill Specialist', area: 'Strategic Operations', liderId: null, antiguedad: 'Demo', ciudad: '', direccion: 'IC Admin', estadoDemo: 'no_iniciada', correoCorporativo: 'gpena@icsecurity.com', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-24', registroPrueba: true },
     { empleado: '260901', nombre: 'Alejandro Herrera Leal', puesto: 'Supply Chain Senior Specialist III', area: 'Supply Chain', liderId: null, antiguedad: 'Demo', ciudad: '', direccion: 'IC Admin', estadoDemo: 'no_iniciada', correoCorporativo: 'alherrera@icsecurity.com', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-24', registroPrueba: true },
-    { empleado: '266885', nombre: 'Sara Margarita Santos Ochoa', puesto: 'Project Operations Manager', area: 'Data Analytics', liderId: null, antiguedad: 'Demo', ciudad: '', direccion: 'IC Admin', estadoDemo: 'no_iniciada', correoCorporativo: 'ssantos@icsecurity.com', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-24', registroPrueba: true }
+    { empleado: '266885', nombre: 'Sara Margarita Santos Ochoa', puesto: 'Project Operations Manager', area: 'Data Analytics', liderId: null, antiguedad: 'Demo', ciudad: '', direccion: 'IC Admin', estadoDemo: 'no_iniciada', correoCorporativo: 'ssantos@icsecurity.com', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-24', registroPrueba: true },
+    { empleado: '990001', nombre: 'Monserrat Cayon', puesto: 'UAT Full-Cycle Reviewer', area: 'IC Admin', liderId: '990001', antiguedad: 'Demo', ciudad: '', direccion: 'IC Admin', estadoDemo: 'no_iniciada', correoCorporativo: '', estatusEmpleado: 'Activo', correoValidado: true, ultimaActualizacion: '2026-09-25', registroPrueba: true }
   ];
 
   // ===========================================================================
