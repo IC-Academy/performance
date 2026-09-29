@@ -2044,7 +2044,7 @@
           <h3>Antes de capturar, revisa cómo se califican tus objetivos</h3>
           <p>Registra hasta cinco objetivos. Captura qué meta se acordó y cuál fue el resultado final. El porcentaje y la calificación se calculan automáticamente.</p>
           <div class="kpi-equivalence-inline">
-            <span><b>5 ★</b> 110% o más</span><span><b>4 ★</b> 100–109%</span><span><b>3 ★</b> 90–99%</span><span><b>2 ★</b> 75–89%</span><span><b>1 ★</b> &lt;75%</span>
+            <span><b>5 ★</b> 110% or more</span><span><b>4 ★</b> 100–109%</span><span><b>3 ★</b> 90–99%</span><span><b>2 ★</b> 75–89%</span><span><b>1 ★</b> Less than 75%</span>
           </div>
         </div>
         <button type="button" class="btn ${comprendido ? 'btn-ack-done' : 'btn-primary'} kpi-understand-btn" onclick="App.comprenderObjetivos('${ev.id}')" ${comprendido ? 'disabled' : ''}>${comprendido ? '✓ Comprendido' : 'Comprendo lo que dice'}</button>
@@ -2581,7 +2581,7 @@
     }
     if (!objetivosAuto.length) return '<p class="muted">El colaborador no registró objetivos en este periodo.</p>';
     return `
-    <div class="kpi-leader-note"><strong>Validación del líder:</strong> la meta y el resultado reportado por el colaborador permanecen visibles como referencia. Como líder debes validar el <b>% de cumplimiento</b> con la información disponible. La calificación en estrellas se calcula automáticamente a partir del porcentaje que valides. Si tu porcentaje difiere del reportado por el colaborador, la justificación es obligatoria y será visible en retroalimentación y calibración de DO.</div>
+    <div class="kpi-leader-note"><strong>Manager validation:</strong> the goal and result reported by the employee remain visible as reference. As Manager, validate the <b>% achievement</b> using the available evidence. The star rating is calculated automatically from the percentage you validate. If your percentage differs from the employee report, a rationale is required and will be visible in Feedback and OD Calibration.</div>
     ${objetivosAuto.map((o, i) => {
       const sourceIndex = Number(o.index);
       const autoScore = Number(o.calificacion) || '';
@@ -2596,17 +2596,17 @@
       const scoreLider = Number.isFinite(pctLider) ? C.calificacionPorCumplimiento(pctLider) : autoScore;
       const just = actual?.justificacionLider || '';
       return `<div class="objetivo-row leader-objective-review ${manual ? 'manual-active' : ''}" data-idx="${sourceIndex}"><div class="objetivo-num">#${i+1}</div><div class="objetivo-fields">
-        <div class="objetivo-lectura"><strong>Objetivo:</strong> ${esc(o.descripcion)}</div>
-        <div class="kpi-leader-grid"><div class="objetivo-lectura"><strong>Meta acordada:</strong> ${esc(o.meta||'—')}</div><div class="objetivo-lectura"><strong>Resultado reportado:</strong> ${esc(o.resultado||'—')}</div><div class="objetivo-lectura"><strong>% reportado por colaborador:</strong> ${esc(o.cumplimiento===''||o.cumplimiento==null?'—':o.cumplimiento+'%')}</div><div class="objetivo-lectura"><strong>Equivalencia del colaborador:</strong> <span class="readonly-rating">${esc(autoScore||'—')} ${autoScore?'★'.repeat(Number(autoScore)||0):''}</span></div></div>
+        <div class="objetivo-lectura"><strong>Goal:</strong> ${esc(o.descripcion)}</div>
+        <div class="kpi-leader-grid"><div class="objetivo-lectura"><strong>Agreed target:</strong> ${esc(o.meta||'—')}</div><div class="objetivo-lectura"><strong>Reported result:</strong> ${esc(o.resultado||'—')}</div><div class="objetivo-lectura"><strong>% reported by employee:</strong> ${esc(o.cumplimiento===''||o.cumplimiento==null?'—':o.cumplimiento+'%')}</div><div class="objetivo-lectura"><strong>Employee rating:</strong> <span class="readonly-rating">${esc(autoScore||'—')} ${autoScore?'★'.repeat(Number(autoScore)||0):''}</span></div></div>
         <div class="leader-score-decision leader-percent-decision">
-          <div class="leader-score-choice-head"><div><strong>Validación del líder</strong><span>${manual ? 'Existe diferencia contra el porcentaje reportado' : 'Coincide con el porcentaje reportado'}</span></div></div>
+          <div class="leader-score-choice-head"><div><strong>Manager validation</strong><span>${manual ? 'Differs from the reported percentage' : 'Matches the reported percentage'}</span></div></div>
           <div class="leader-percent-grid">
-            <label class="leader-percent-field"><span>% de cumplimiento validado por líder</span><div class="percent-input-wrap"><input type="number" min="0" step="0.1" value="${Number.isFinite(pctLider)?esc(pctLider):''}" onchange="App.validarCumplimientoObjetivoLider('${ev.id}',${sourceIndex},this.value)"/><b>%</b></div><small>Captura el porcentaje que determinaste después de validar la evidencia o fuente.</small></label>
-            <div class="leader-derived-rating"><span>Calificación resultante</span><strong>${esc(scoreLider||'—')}/5 ${scoreLider?'★'.repeat(Number(scoreLider)||0):''}</strong><small>Se calcula automáticamente con la equivalencia Rev. 4.</small></div>
+            <label class="leader-percent-field"><span>% achievement validated by manager</span><div class="percent-input-wrap"><input type="number" min="0" step="0.1" value="${Number.isFinite(pctLider)?esc(pctLider):''}" onchange="App.validarCumplimientoObjetivoLider('${ev.id}',${sourceIndex},this.value)"/><b>%</b></div><small>Enter the percentage determined after reviewing the evidence or source.</small></label>
+            <div class="leader-derived-rating"><span>Resulting rating</span><strong>${esc(scoreLider||'—')}/5 ${scoreLider?'★'.repeat(Number(scoreLider)||0):''}</strong><small>Calculated automatically using the Rev. 4 rating scale.</small></div>
           </div>
-          ${manual ? `<label class="leader-justification-field"><span>Justificación de la diferencia <em>obligatoria</em></span><textarea placeholder="Explica por qué el porcentaje validado difiere del reportado por el colaborador e indica la evidencia o fuente revisada..." oninput="App.justificarObjetivoLider('${ev.id}',${sourceIndex},this.value)">${esc(just)}</textarea></label>` : `<div class="leader-auto-score-kept"><span>✓</span><div><strong>Sin ajuste</strong><small>El porcentaje validado coincide con el colaborador.</small></div></div>`}
+          ${manual ? `<label class="leader-justification-field"><span>Adjustment rationale <em>required</em></span><textarea placeholder="Explain why the validated percentage differs from the employee report and identify the evidence or source reviewed..." oninput="App.justificarObjetivoLider('${ev.id}',${sourceIndex},this.value)">${esc(just)}</textarea></label>` : `<div class="leader-auto-score-kept"><span>✓</span><div><strong>No adjustment</strong><small>The validated percentage matches the employee report.</small></div></div>`}
         </div>
-        <div class="validation-message" aria-live="polite">Si el porcentaje validado es diferente al reportado por el colaborador, registra la justificación y fuente utilizada.</div>
+        <div class="validation-message" aria-live="polite">If the validated percentage differs from the employee report, provide the rationale and source used.</div>
       </div></div>`;
     }).join('')}`;
   }
