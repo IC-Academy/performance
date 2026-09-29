@@ -135,7 +135,7 @@
       const originalLabel = nextBtn ? nextBtn.textContent : '';
       if (nextBtn) {
         nextBtn.disabled = true;
-        nextBtn.textContent = 'Guardando…';
+        nextBtn.textContent = 'Saving…';
         nextBtn.setAttribute('aria-busy', 'true');
       }
 
@@ -170,7 +170,7 @@
     App.wizardNext = progressiveWizardNext;
   }
 
-  // The explicit "Guardar progreso" button also saves only the visible
+  // The explicit "Save progress" button also saves only the visible
   // section. Existing ALL behavior remains available on the summary screen.
   const originalSaveProgress = App.guardarProgresoVisual && App.guardarProgresoVisual.bind(App);
   if (originalSaveProgress && !App.guardarProgresoVisual.__progressiveV28) {
