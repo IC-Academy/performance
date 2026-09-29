@@ -44,11 +44,11 @@
     guide.innerHTML = `
       <div class="leader-guide-title"><strong>Escala rápida para objetivos</strong><span>La estrella se obtiene del % validado por el líder.</span></div>
       <div class="leader-star-scale">
-        <span><b>5 ★</b><small>110% o más</small></span>
+        <span><b>5 ★</b><small>110% or more</small></span>
         <span><b>4 ★</b><small>100% a 109%</small></span>
         <span><b>3 ★</b><small>90% a 99%</small></span>
         <span><b>2 ★</b><small>75% a 89%</small></span>
-        <span><b>1 ★</b><small>Menos de 75%</small></span>
+        <span><b>1 ★</b><small>Less than 75%</small></span>
       </div>`;
     objectiveHeading.insertAdjacentElement('afterend', guide);
   }
@@ -75,7 +75,7 @@
         <div class="objective-flow-copy">
           <span class="objective-flow-kicker">¿QUÉ DEBES VALIDAR?</span>
           <strong>Compara el resultado contra la meta.</strong>
-          <small>El sistema calcula <b>Resultado ÷ Meta × 100</b>. Como líder solo confirma ese porcentaje o corrígelo si tu evidencia indica otro resultado.</small>
+          <small>El sistema calcula <b>Result ÷ Meta × 100</b>. Como líder solo confirma ese porcentaje o corrígelo si tu evidencia indica otro resultado.</small>
         </div>
         <div class="objective-flow-numbers">
           <div><small>1 · META ACORDADA</small><strong>${Number.isFinite(meta) ? meta : '—'}</strong><span>Lo que debía lograrse</span></div>
@@ -117,11 +117,11 @@
     });
     return `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${title}</title><style>
       @page{size:A4;margin:13mm}*{box-sizing:border-box}body{font-family:Segoe UI,Arial,sans-serif;color:#0b2545;margin:0;background:#fff;font-size:11px;line-height:1.45}.doc-head{background:#082b52;color:white;padding:22px 26px;border-radius:14px;margin-bottom:18px}.doc-brand{font-size:11px;letter-spacing:2px;font-weight:700;opacity:.8}.doc-head h1{font-size:25px;margin:5px 0 3px;color:white}.doc-head p{margin:0;opacity:.86}.doc-meta{display:flex;justify-content:space-between;gap:15px;margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.25)}#app-root{max-width:none!important}.container,.main-content,.content{max-width:none!important;width:100%!important;margin:0!important;padding:0!important}.card,.admin-panel,.feedback-acceptance-card,.leader-release-card,.performance-summary,.comparison-card{box-shadow:none!important;border:1px solid #d9e4f0!important;border-radius:12px!important;margin:0 0 12px!important;padding:14px!important;background:#fff!important}h1,h2,h3,h4{color:#082b52!important;break-after:avoid}.table{width:100%;border-collapse:collapse;font-size:10px}.table th{background:#edf4fb!important;color:#082b52!important;padding:7px}.table td{padding:7px;border-bottom:1px solid #e4ebf3}.print-field-value{border:1px solid #d9e4f0;background:#f8fbfe;padding:8px;border-radius:8px;min-height:30px}.leader-objective-scale-guide,.leader-objective-visual-flow{break-inside:avoid}.sidebar,.leader-sidebar,.admin-sidebar{display:none!important}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
-    </style></head><body><header class="doc-head"><div class="doc-brand">INTER-CON · EVALUACIÓN DE DESEMPEÑO</div><h1>${title}</h1><p>Constancia de retroalimentación y seguimiento del periodo.</p><div class="doc-meta"><span>Documento generado desde la plataforma oficial</span><span>${new Date().toLocaleDateString('es-MX')}</span></div></header>${clone.innerHTML}</body></html>`;
+    </style></head><body><header class="doc-head"><div class="doc-brand">INTER-CON · EVALUACIÓN DE PERFORMANCE</div><h1>${title}</h1><p>Constancia de retroalimentación y seguimiento del periodo.</p><div class="doc-meta"><span>Documento generado desde la plataforma oficial</span><span>${new Date().toLocaleDateString('es-MX')}</span></div></header>${clone.innerHTML}</body></html>`;
   }
 
   App.imprimirRetroalimentacion = function () {
-    const html = createPrintableDocument('Retroalimentación de desempeño');
+    const html = createPrintableDocument('Feedback de desempeño');
     if (!html) return;
     const w = window.open('', '_blank');
     if (!w) { alert('El navegador bloqueó la ventana de impresión. Habilita ventanas emergentes para este sitio.'); return; }
