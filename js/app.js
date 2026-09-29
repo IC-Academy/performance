@@ -26,7 +26,7 @@
   // =========================================================================
   const LANG_KEY = 'edd_ic_admin_language';
   function getLang() { return 'en'; }
-  function setLang() { localStorage.setItem(LANG_KEY, 'en'); }
+  function setLanguage() { localStorage.setItem(LANG_KEY, 'en'); return 'en'; }
   function t(text) { return String(text == null ? '' : text); }
 
   function translateDOM(root) {
