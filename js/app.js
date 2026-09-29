@@ -3424,6 +3424,12 @@
         <div class="form-group"><label>Revisar hasta</label><input type="number" step="0.01" id="cfgRevisar" value="${cfg.configBrecha.revisarMax}"/></div>
       </div>
       <button class="btn btn-outline" onclick="App.guardarConfigBrecha()">Guardar umbrales</button>
+      <hr style="margin:28px 0 22px;border:0;border-top:1px solid #D6DDe5"/>
+      <section class="demo-reset-panel">
+        <h3>Restablecer datos demo</h3>
+        <p class="muted">Restaura todos los datos de la demo a su estado inicial. No afecta Airtable, n8n ni datos reales.</p>
+        <button class="btn btn-outline" type="button" onclick="if(confirm('¿Restablecer datos demo? Se eliminará el progreso realizado durante las pruebas y se restaurarán los escenarios demo originales.')) App.reiniciarDemo()">Restablecer datos demo</button>
+      </section>
     </div>`;
   }
 
