@@ -30,44 +30,12 @@
   function t(text) { return String(text == null ? '' : text); }
 
   function translateDOM(root) {
-    document.documentElement.lang = currentLang;
-    if (currentLang !== 'en' || !root) return;
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-    const nodes = [];
-    while (walker.nextNode()) nodes.push(walker.currentNode);
-    nodes.forEach((node) => {
-      const raw = node.nodeValue || '';
-      const trimmed = raw.trim();
-      if (!trimmed) return;
-      const normalized = trimmed.replace(/\s+/g, ' ');
-      let translated = EN[trimmed] || EN[normalized] || normalized;
-      if (translated === normalized) {
-        // Dynamic values that are not fixed UI labels (names, counts and tenure).
-        const greeting = normalized.match(/^¡Bienvenid[oa],\s*(.+)!$/i);
-        const thanks = normalized.match(/^Gracias por tu participación,\s*(.+)\.$/i);
-        if (greeting) translated = `Welcome, ${greeting[1]}!`;
-        else if (thanks) translated = `Thank you for participating, ${thanks[1]}.`;
-        // Other dynamic sentences remain untouched until they have an
-        // explicit full-sentence translation. Partial replacements are not
-        // allowed because they create mixed Spanish/English text.
-        // Never translate fragments inside a longer sentence. Doing so creates
-        // mixed-language UI when only one word happens to exist in EN.
-      }
-      if (translated !== normalized) node.nodeValue = raw.replace(trimmed, translated);
-    });
-    root.querySelectorAll('[placeholder],[title],[aria-label]').forEach((el) => {
-      ['placeholder','title','aria-label'].forEach((attr) => {
-        const v = el.getAttribute(attr);
-        if (v && (EN[v] || ATTR_EN[v])) el.setAttribute(attr, EN[v] || ATTR_EN[v]);
-      });
-    });
+    document.documentElement.lang = 'en';
+    return root;
   }
 
-  function languageSwitcher(compact) {
-    return `<div class="language-switch ${compact ? 'language-switch-compact' : ''}" role="group" aria-label="Idioma / Language">
-      <button type="button" class="language-option ${currentLang === 'es' ? 'active' : ''}" onclick="App.setLanguage('es')">ES</button>
-      <button type="button" class="language-option ${currentLang === 'en' ? 'active' : ''}" onclick="App.setLanguage('en')">EN</button>
-    </div>`;
+  function languageSwitcher() {
+    return '';
   }
 
   const state = {
@@ -813,10 +781,10 @@
   function showNotice(message, type) {
     let host=document.getElementById('appInlineNotice');
     if(!host){ host=document.createElement('div'); host.id='appInlineNotice'; host.className='app-inline-notice'; document.body.appendChild(host); }
-    const translatedMessage = currentLang === 'en' && global.EDDI18N
+    const translatedMessage = 'en' === 'en' && global.EDDI18N
       ? global.EDDI18N.translateText(message)
       : t(message);
-    host.className='app-inline-notice show '+(type||'info'); host.innerHTML=`<span>${esc(translatedMessage)}</span><button type="button" aria-label="${currentLang === 'en' ? 'Close' : 'Cerrar'}" onclick="this.parentElement.classList.remove('show')">×</button>`;
+    host.className='app-inline-notice show '+(type||'info'); host.innerHTML=`<span>${esc(translatedMessage)}</span><button type="button" aria-label="${'en' === 'en' ? 'Close' : 'Cerrar'}" onclick="this.parentElement.classList.remove('show')">×</button>`;
     clearTimeout(showNotice._timer); showNotice._timer=setTimeout(()=>host.classList.remove('show'),5200);
   }
 
@@ -3381,7 +3349,7 @@
         syncCheckedRatingsFromDom();
         const faltantes = validarSeccionVisual(ev.id, seccion);
         if (faltantes) {
-          showNotice(currentLang === 'en' ? `You cannot continue. Review the fields marked in red.` : `No puedes continuar. Revisa los campos marcados en rojo.`,'warning');
+          showNotice('en' === 'en' ? `You cannot continue. Review the fields marked in red.` : `No puedes continuar. Revisa los campos marcados en rojo.`,'warning');
           return;
         }
       }
@@ -3551,7 +3519,7 @@
       try {
         const col = S.getEmployee(state.wizard.colaboradorId);
         const employeeContext = col ? { position: col.puesto, area: col.area } : undefined;
-        const propuesta = await generarPropuestaSmartIA(idea, currentLang, employeeContext);
+        const propuesta = await generarPropuestaSmartIA(idea, 'en', employeeContext);
         state.aiSmart.proposal = propuesta;
         state.aiSmart.loading = false;
         renderAiSmartModal();
@@ -3610,7 +3578,7 @@
           state.wizard.seccionIdx = i; render();
           setTimeout(() => {
             const n = validarSeccionVisual(evaluacionId, sec);
-            showNotice(currentLang === 'en' ? `You cannot submit. Review the fields marked in red.` : `No puedes enviar. Revisa los campos marcados en rojo.`,'warning');
+            showNotice('en' === 'en' ? `You cannot submit. Review the fields marked in red.` : `No puedes enviar. Revisa los campos marcados en rojo.`,'warning');
           }, 0);
           return;
         }
@@ -3736,7 +3704,7 @@
           state.wizard.seccionIdx = i; render();
           setTimeout(() => {
             const n = validarSeccionVisual(evaluacionId, sec);
-            showNotice(currentLang === 'en' ? `You cannot submit. Review the fields marked in red.` : `No puedes enviar. Revisa los campos marcados en rojo.`,'warning');
+            showNotice('en' === 'en' ? `You cannot submit. Review the fields marked in red.` : `No puedes enviar. Revisa los campos marcados en rojo.`,'warning');
           }, 0);
           return;
         }
@@ -3744,7 +3712,7 @@
       const evActual = S.load().evaluaciones.find((e) => e.id === evaluacionId);
       if (!(evActual && evActual.continuityOperationalImpact && evActual.continuityReplacementAvailability)) {
         state.wizard.seccionIdx = SECCIONES_WIZARD.length - 1; render();
-        setTimeout(() => showNotice(currentLang === 'en' ? 'Complete the confidential operational continuity section before submitting.' : 'Completa la sección confidencial de continuidad operativa antes de enviar.','warning'), 0);
+        setTimeout(() => showNotice('en' === 'en' ? 'Complete the confidential operational continuity section before submitting.' : 'Completa la sección confidencial de continuidad operativa antes de enviar.','warning'), 0);
         return;
       }
       if (requiereJustificacionNA(evaluacionId) && !(evActual && String(evActual.comentarios || '').trim())) {
