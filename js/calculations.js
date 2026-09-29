@@ -1,7 +1,7 @@
 /**
  * calculations.js
  * ---------------------------------------------------------------------------
- * Motor de cálculo de la Evaluación del Performance Administrativo (EDD)
+ * Motor de cálculo de la Evaluación del Desempeño Administrativo (EDD)
  * INTER-CON SERVICIOS DE SEGURIDAD PRIVADA, S.A. DE C.V.
  * Documento fuente: EDD_Inter-Con_Rev4_ponderacion_40_60.docx (FOR-CAP-003 Rev. 4)
  *
@@ -17,7 +17,7 @@
   // 1. PONDERACIÓN GENERAL
   //
   // Ponderación acordada en demo del 11-08-2026: dos bloques 50/50.
-  // Valores y Attitude aporta 50% del total. El bloque técnico-funcional +
+  // Valores y Actitud aporta 50% del total. El bloque técnico-funcional +
   // objetivos aporta el otro 50%. Hasta que DO confirme otro reparto interno,
   // se conserva la proporción previa B:C:D = 20:10:30 (2:1:3), escalada a 50%.
   //
@@ -27,7 +27,7 @@
   // vez reparte estos mismos totales entre las competencias de cada sección).
   // ===========================================================================
   const PESOS_SECCION = {
-    actitud: 40,       // Bloque 1 — Valores y Attitude
+    actitud: 40,       // Bloque 1 — Valores y Actitud
     habilidades: 30,  // Bloque 2B — Conocimientos y Habilidades Técnicas
     conocimientos: 0, // Compatibilidad interna: Rev.4 integra conocimientos + habilidades en B
     objetivos: 30      // Bloque 2C — Cumplimiento de Objetivos
@@ -64,9 +64,9 @@
   //    Nivel 1: <60 · Nivel 2: 60-79 · Nivel 3: 80-100.
   // ===========================================================================
   const CONFIG_9BOX = {
-    ejeVertical: 'Attitude',
-    ejeHorizontal: 'Performance',
-    etiquetasNivel: ['Low', 'Medium / expected', 'High'],
+    ejeVertical: 'Actitud',
+    ejeHorizontal: 'Desempeño',
+    etiquetasNivel: ['Bajo', 'Medio / esperado', 'Alto'],
     nivel1MaxBase100: 59.9999,
     nivel2MaxBase100: 79.9999,
     nivel3MaxBase100: 100
@@ -81,62 +81,62 @@
 
   // ===========================================================================
   // 4. INFORMACIÓN DE LOS 9 CUADRANTES (documento oficial, secciones V y VI)
-  //    cuadrante = (nivelDesempeno - 1) * 3 + nivelAttitude
+  //    cuadrante = (nivelDesempeno - 1) * 3 + nivelActitud
   // ===========================================================================
   const CUADRANTES_INFO = {
     1: {
       numero: 1, nombre: 'Black Spot',
-      significado: 'Does not currently demonstrate the attitude or knowledge required for the role.',
-      accion: 'Immediate action plan with measurable improvement within one month; otherwise review role fit.',
-      color: '#c0392b', prioridad: 'Critical', seguimiento: 'Review in 1 month'
+      significado: 'No tiene la actitud ni los conocimientos requeridos para su posición.',
+      accion: 'No Inter-Con — con plan de acción inmediato y mejora en un mes; de lo contrario, debe salir de la empresa.',
+      color: '#c0392b', prioridad: 'Crítica', seguimiento: 'Revisión en 1 mes'
     },
     2: {
       numero: 2, nombre: 'Sembrando',
-      significado: 'Attitude is stronger than performance.',
-      accion: 'Requires a clear development plan in identified opportunity areas; reassess in 3 months.',
-      color: '#e0731c', prioridad: 'High', seguimiento: 'Review in 3 months'
+      significado: 'Mejor actitud que desempeño.',
+      accion: 'Requiere plan claro de capacitación en sus áreas de posibilidad; evaluar en 3 meses.',
+      color: '#e0731c', prioridad: 'Alta', seguimiento: 'Revisión en 3 meses'
     },
     3: {
       numero: 3, nombre: 'Semilla',
-      significado: 'Attitude positiva, pero desempeño bajo.',
-      accion: 'Inter-Con people potential — technical development plan and reassessment in 3 months with demonstrated improvement.',
-      color: '#e0a800', prioridad: 'High', seguimiento: 'Review in 3 months'
+      significado: 'Actitud positiva, pero desempeño bajo.',
+      accion: 'Potencial Gente Inter-Con — plan de capacitación técnica y evaluación en 3 meses mostrando mejora.',
+      color: '#e0a800', prioridad: 'Alta', seguimiento: 'Revisión en 3 meses'
     },
     4: {
       numero: 4, nombre: 'En Maceta',
-      significado: 'Positive contribution, but results remain below the expected standard.',
-      accion: 'Focus on attitude development through coaching and reassessment every 3 months.',
-      color: '#e0a800', prioridad: 'Medium-High', seguimiento: 'Coaching cada 3 meses'
+      significado: 'Trabajo positivo, pero resultados aún por debajo del estándar.',
+      accion: 'Debe trabajar su actitud; se sugiere plan de coaching y evaluación cada 3 meses.',
+      color: '#e0a800', prioridad: 'Media-Alta', seguimiento: 'Coaching cada 3 meses'
     },
     5: {
       numero: 5, nombre: 'Sol',
       significado: 'En la mitad — OK.',
-      accion: 'Solid contributor — performs the role effectively with a positive attitude.',
-      color: '#3b82c4', prioridad: 'Medium', seguimiento: 'Follow-up in the next cycle'
+      accion: 'OK — está en su zona de confort y hace bien su trabajo con actitud positiva.',
+      color: '#3b82c4', prioridad: 'Media', seguimiento: 'Seguimiento en el próximo periodo'
     },
     6: {
       numero: 6, nombre: 'Cosecha',
-      significado: 'Positive attitude and solid performance with good growth potential.',
-      accion: 'Guardian — demonstrates potential for a leadership role in the company.',
-      color: '#4caf50', prioridad: 'Medium', seguimiento: 'Plan de crecimiento'
+      significado: 'Buena actitud y desempeño promedio; buen potencial de crecimiento.',
+      accion: 'Guardián — capacidad para un puesto de liderazgo en la empresa.',
+      color: '#4caf50', prioridad: 'Media', seguimiento: 'Plan de crecimiento'
     },
     7: {
       numero: 7, nombre: 'Agua',
-      significado: 'Attitude negativa, pero desempeño superior al promedio.',
-      accion: 'Requires an attitude development plan to support continued growth at Inter-Con.',
-      color: '#e0731c', prioridad: 'High', seguimiento: 'Short-term attitude plan'
+      significado: 'Actitud negativa, pero desempeño superior al promedio.',
+      accion: 'Debe trabajar su actitud para crecer en Inter-Con; hacer un plan o considerar retiro en el corto plazo.',
+      color: '#e0731c', prioridad: 'Alta', seguimiento: 'Plan de actitud en el corto plazo'
     },
     8: {
-      numero: 8, nombre: 'Heart',
-      significado: 'Above average, demonstrating both capability and positive attitude.',
-      accion: 'Growth — ready to prepare for a leadership position in the near term.',
-      color: '#2e7d32', prioridad: 'High', seguimiento: 'Plan de crecimiento en el corto plazo'
+      numero: 8, nombre: 'Corazón',
+      significado: 'Por encima del promedio; tiene capacidad y actitud.',
+      accion: 'Crecimiento — listo para una posición de liderazgo en el corto plazo.',
+      color: '#2e7d32', prioridad: 'Alta', seguimiento: 'Plan de crecimiento en el corto plazo'
     },
     9: {
       numero: 9, nombre: 'Green Spot',
-      significado: 'Meets expectations in both attitude and performance.',
-      accion: 'High Potencial — estrella de Inter-Con, lista para promoción inmediata.',
-      color: '#1b5e20', prioridad: 'High', seguimiento: 'Immediate promotion consideration'
+      significado: 'Cumple a satisfacción tanto en actitud como en desempeño.',
+      accion: 'Alto Potencial — estrella de Inter-Con, lista para promoción inmediata.',
+      color: '#1b5e20', prioridad: 'Alta', seguimiento: 'Promoción inmediata'
     }
   };
 
@@ -262,20 +262,20 @@
   }
 
   /**
-   * actitudProm: promedio 1-5 de la sección A (Valores y Attitude), convertido
+   * actitudProm: promedio 1-5 de la sección A (Valores y Actitud), convertido
    *   a base 100 para determinar el nivel del eje ACTITUD.
    * desempenoProm: promedio ponderado 1-5 de B+C (Técnica Funcional + Objetivos), usando pesos 30/30 de Rev.4.
    * Fórmula validada contra el documento oficial:
-   *   cuadrante = (nivelDesempeno - 1) * 3 + nivelAttitude
+   *   cuadrante = (nivelDesempeno - 1) * 3 + nivelActitud
    */
   function asignarCuadrante(actitudProm, desempenoProm) {
     const nA = nivelEje(actitudProm);
     const nD = nivelEje(desempenoProm);
     if (nA === null || nD === null) {
-      return { cuadrante: null, nivelAttitude: nA, nivelDesempeno: nD, info: null };
+      return { cuadrante: null, nivelActitud: nA, nivelDesempeno: nD, info: null };
     }
     const numero = (nD - 1) * 3 + nA;
-    return { cuadrante: numero, nivelAttitude: nA, nivelDesempeno: nD, info: CUADRANTES_INFO[numero] };
+    return { cuadrante: numero, nivelActitud: nA, nivelDesempeno: nD, info: CUADRANTES_INFO[numero] };
   }
 
   // ===========================================================================
