@@ -4032,7 +4032,7 @@
   // Expose the consolidated legacy catalog to the single DOM translator.
   // This keeps dynamically rendered labels covered without reintroducing
   // competing observers or partial word replacement.
-  global.EDDInlineEnglish = EN;
+  global.EDDInlineEnglish = {};
   global.App = Actions;
   function applyDeclaredRatingAction(action, value) {
     const match = String(action || '').match(/^App\.(rate|rateHerramienta)\('([^']*)','([^']*)','([^']*)',this\.value\)$/);
