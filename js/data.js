@@ -273,7 +273,7 @@
     const rng = crearRng(claseHash(semillaTexto));
     return competencias.map((c, idx) => {
       if (incluirNA && idx === competencias.length - 1 && rng() < 0.3) {
-        return { competenciaId: c.id, valor: 'N/A', comentario: 'Sin elementos suficientes para evaluar en este periodo.' };
+        return { competenciaId: c.id, valor: 'N/A', comentario: 'Insufficient evidence to assess this competency during the current cycle.' };
       }
       const variacion = (rng() - 0.5) * 1.2;
       let v = Math.round(valorObjetivo + variacion);
@@ -283,11 +283,11 @@
   }
 
   const OBJETIVOS_MUESTRA = [
-    ['Reducir el tiempo de respuesta a solicitudes internas en un 15%.', 'Se redujo el tiempo de respuesta en 18%, superando la meta.'],
-    ['Actualizar el 100% de los expedientes del área durante el trimestre.', 'Se actualizó el 95% de los expedientes; quedaron pendientes 2 casos especiales.'],
-    ['Implementar un tablero de seguimiento mensual para el equipo.', 'Tablero implementado y en uso desde el segundo mes del periodo.'],
-    ['Capacitar al equipo en el nuevo procedimiento operativo.', 'Se capacitó al 100% del equipo con evaluación de conocimientos aprobatoria.'],
-    ['Disminuir incidencias reportadas por el cliente interno.', 'Las incidencias bajaron de 12 a 6 en el periodo evaluado.']
+    ['Reduce response time for internal requests by 15%.', 'Response time was reduced by 18%, exceeding the target.'],
+    ['Update 100% of the department records during the quarter.', '95% of the records were updated; two special cases remained pending.'],
+    ['Implement a monthly follow-up dashboard for the team.', 'The dashboard was implemented and has been in use since the second month of the cycle.'],
+    ['Train the team on the new operating procedure.', '100% of the team completed training and passed the knowledge assessment.'],
+    ['Reduce incidents reported by internal clients.', 'Reported incidents decreased from 12 to 6 during the evaluation cycle.']
   ];
 
   function generarObjetivos(valorObjetivo, semillaTexto, cantidad) {
