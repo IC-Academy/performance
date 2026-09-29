@@ -37,8 +37,8 @@
         }
         if (processIdx >= 0 && cells[processIdx]) {
           const v = lower(txt(cells[processIdx]));
-          if (v.includes('leader_submitted')) cells[processIdx].innerHTML = '<span class="badge badge-yellow">Pendiente de calibración</span>';
-          else if (v.includes('pending_calibration')) cells[processIdx].innerHTML = '<span class="badge badge-yellow">Pendiente de calibración</span>';
+          if (v.includes('leader_submitted')) cells[processIdx].innerHTML = '<span class="badge badge-yellow">Pending calibration</span>';
+          else if (v.includes('pending_calibration')) cells[processIdx].innerHTML = '<span class="badge badge-yellow">Pending calibration</span>';
           else if (v.includes('feedback_pending') || v.includes('pending_meeting')) cells[processIdx].innerHTML = '<span class="badge badge-yellow">Pendiente de retroalimentación</span>';
           else if (v.includes('pending_leader_signature')) cells[processIdx].innerHTML = '<span class="badge badge-red">Pendiente de tu firma</span>';
         }
@@ -129,9 +129,9 @@
     const leader = /leader_submitted/i.test(String(x.leaderStatus || '')) ? 'Evaluación enviada' : (x.leaderStatus || '—');
     const processRaw = lower(x.processState || '');
     let process = x.processState || '—';
-    if (/leader_submitted|pending_calibration/.test(processRaw)) process = 'Pendiente de calibración';
+    if (/leader_submitted|pending_calibration/.test(processRaw)) process = 'Pending calibration';
     const feedback = x.feedbackState || '—';
-    const signature = needsLeaderSignature(x) ? '<span class="badge badge-red">Pendiente líder</span>' : (x.employeeSignaturePending ? '<span class="badge badge-yellow">Pendiente colaborador</span>' : '—');
+    const signature = needsLeaderSignature(x) ? '<span class="badge badge-red">Pending manager</span>' : (x.employeeSignaturePending ? '<span class="badge badge-yellow">Pendiente colaborador</span>' : '—');
     let action = '';
     if (mode === 'pending') action = `<button class="btn btn-primary btn-sm workflow-action-primary" onclick="App.abrirEvaluacionLider('${esc(id)}','${esc(evId)}')">Evaluar ahora →</button>`;
     else if (mode === 'sign') action = `<button class="btn btn-primary btn-sm workflow-action-primary" onclick="App.abrirComparacionLider('${esc(id)}','${esc(evId)}')">Firmar ahora →</button>`;
@@ -175,7 +175,7 @@
     if (location.hash.indexOf('/admin/') === -1) return;
     const data = await getAdminCalibration(false);
     const pending = data && Array.isArray(data.pending) ? data.pending : [];
-    setNavBadge(findNavItem(/^Calibración/i), pending.length, 'attention');
+    setNavBadge(findNavItem(/^Calibration/i), pending.length, 'attention');
     if (!pending.length) return;
     const host = document.querySelector('.admin-premium-shell, .admin-panel, main, #app-root');
     if (host && !document.querySelector('.workflow-admin-alert')) {
@@ -275,13 +275,13 @@
       });
       return `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${esc(title)}</title><style>
         @page{size:A4;margin:13mm}*{box-sizing:border-box}body{font-family:Segoe UI,Arial,sans-serif;color:#0b2545;margin:0;background:#fff;font-size:10.5px;line-height:1.42}.doc-head{background:#082b52;color:#fff;padding:20px 24px;border-radius:12px;margin-bottom:16px}.doc-brand{font-size:10px;letter-spacing:1.8px;font-weight:700;opacity:.82}.doc-head h1{font-size:23px;margin:5px 0 3px;color:#fff}.doc-head p{margin:0;opacity:.86}.doc-meta{display:flex;justify-content:space-between;gap:15px;margin-top:13px;padding-top:10px;border-top:1px solid rgba(255,255,255,.25)}#app-root{max-width:none!important}.sidebar,.leader-sidebar,.admin-sidebar,.premium-evaluation-sidebar{display:none!important}.container,.main-content,.content,.premium-evaluation-main{max-width:none!important;width:100%!important;margin:0!important;padding:0!important}.card,.admin-panel,.feedback-acceptance-card,.leader-release-card,.performance-summary,.comparison-card{box-shadow:none!important;border:1px solid #d9e4f0!important;border-radius:10px!important;margin:0 0 10px!important;padding:12px!important;background:#fff!important}h1,h2,h3,h4{color:#082b52!important;break-after:avoid}.table{width:100%;border-collapse:collapse;font-size:9.5px}.table th{background:#edf4fb!important;color:#082b52!important;padding:6px}.table td{padding:6px;border-bottom:1px solid #e4ebf3}.print-field-value{border:1px solid #d9e4f0;background:#f8fbfe;padding:7px;border-radius:7px;min-height:28px}img{max-width:100%!important;height:auto!important;object-fit:contain!important}.signature-preview,.signature-signed-summary+img,.sig img,img[alt*="Firma" i]{display:block!important;width:auto!important;max-width:180px!important;max-height:70px!important;margin:6px auto!important;object-fit:contain!important}.logo img,.app-logo img,header img{max-height:46px!important;width:auto!important}.evidence img,.evidencia img,.attachment img{max-width:280px!important;max-height:190px!important;object-fit:contain!important}.leader-objective-scale-guide,.leader-objective-visual-flow,.signature-card{break-inside:avoid}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
-      </style></head><body><header class="doc-head"><div class="doc-brand">INTER-CON · EVALUACIÓN DE DESEMPEÑO</div><h1>${esc(title)}</h1><p>Constancia final del proceso de retroalimentación.</p><div class="doc-meta"><span>Documento generado desde la plataforma oficial</span><span>${new Date().toLocaleDateString('es-MX')}</span></div></header>${clone.innerHTML}</body></html>`;
+      </style></head><body><header class="doc-head"><div class="doc-brand">INTER-CON · EVALUACIÓN DE PERFORMANCE</div><h1>${esc(title)}</h1><p>Constancia final del proceso de retroalimentación.</p><div class="doc-meta"><span>Documento generado desde la plataforma oficial</span><span>${new Date().toLocaleDateString('es-MX')}</span></div></header>${clone.innerHTML}</body></html>`;
     }
 
     App.imprimirRetroalimentacion = function () {
       const section = document.querySelector('.feedback-acceptance-card, .leader-release-card');
       if (section && !processCompleteFromDom(section)) return;
-      const html = buildDocument('Retroalimentación de desempeño'); if (!html) return;
+      const html = buildDocument('Feedback de desempeño'); if (!html) return;
       const w = window.open('', '_blank'); if (!w) return;
       w.document.open(); w.document.write(html); w.document.close();
       const go = () => { try { w.focus(); w.print(); } catch (_) {} };
