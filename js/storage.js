@@ -49,7 +49,7 @@
   // v3 local demo: managers 20001/20002 also have their own employee record
   // and self-assessment. A clean namespace prevents an old browser seed from
   // hiding the newly accumulated profiles.
-  const STORAGE_KEY = 'edd_ic_admin_demo_db_v4';
+  const STORAGE_KEY = 'edd_ic_admin_demo_db_v5';
   let _db = null; // caché en memoria
 
   // ===========================================================================
@@ -191,7 +191,11 @@
       const perfilLider = col.perfilObjetivoLider || perfilAuto;
       const evalLiderId = crearEvaluacion(col, 'lider', perfilLider, D.ESTADOS.COMPLETADA, fechaLider, true);
       const liderEval = db.evaluaciones.find((e) => e.id === evalLiderId);
-      liderEval.fortalezas = 'Muestra disposición y compromiso con el equipo.';
+      liderEval.fortalezas = 'Consistently demonstrates ownership, collaboration, and reliable delivery against agreed priorities.';
+      liderEval.oportunidadesDesarrollo = 'Increase cross-functional visibility and strengthen planning for higher-impact initiatives.';
+      liderEval.debilidadesBrechas = 'Follow-up discipline can be more consistent when several priorities compete for attention.';
+      liderEval.riesgosAtencion = 'Sustained workload may affect response times if priorities and ownership are not reviewed regularly.';
+      liderEval.comentarios = 'Performance is solid overall. Continue building autonomy, prioritization, and proactive stakeholder communication.';
       const resultadoLider = calcularYGuardarResultado(evalLiderId, col.empleado, 'lider', fechaLider);
 
       if (estado === 'pendiente_calibracion') return;
@@ -211,12 +215,12 @@
         resultadoLider: totalLider,
         diferenciaGeneral: C.round1(totalAuto - totalLider),
         ajuste,
-        justificacion: 'Se ratifica el resultado de la evaluación del líder tras revisar evidencias y expediente administrativo.',
+        justificacion: 'The manager result is confirmed after reviewing documented evidence, outcomes, and the available performance record.',
         resultadoCalibrado,
-        responsable: 'Administrador DO',
+        responsable: 'OD Administrator',
         actas: index % 4 === 0 ? 1 : 0,
-        nom035: index % 3 === 0 ? 'Riesgo medio — seguimiento sugerido' : 'Riesgo bajo',
-        observacionesRH: 'Sin observaciones adicionales de DO para este periodo.',
+        nom035: index % 3 === 0 ? 'Medium risk — follow-up recommended' : 'Low risk',
+        observacionesRH: 'No observaciones adicionales de DO para este periodo.',
         fecha: fechaCalib,
         hora: '10:00',
         retroHabilitada: false,
