@@ -49,7 +49,7 @@
   // v3 local demo: managers 20001/20002 also have their own employee record
   // and self-assessment. A clean namespace prevents an old browser seed from
   // hiding the newly accumulated profiles.
-  const STORAGE_KEY = 'edd_ic_admin_demo_db_v3';
+  const STORAGE_KEY = 'edd_ic_admin_demo_db_v4';
   let _db = null; // caché en memoria
 
   // ===========================================================================
@@ -220,6 +220,16 @@
         fecha: fechaCalib,
         hora: '10:00',
         retroHabilitada: false,
+        reunionLiderRealizada: false,
+        acuerdosLiberados: false,
+        firmaLider: false,
+        firmaColaborador: false,
+        fechaFirmaLider: null,
+        fechaFirmaColaborador: null,
+        firmaLiderNombre: '',
+        firmaColaboradorNombre: '',
+        firmaLiderData: '',
+        firmaColaboradorData: '',
         aceptacionColaborador: false,
         fechaAceptacion: null,
         historial: [{
@@ -240,6 +250,12 @@
 
       if (estado === 'retro_pendiente') {
         calibracion.retroHabilitada = true;
+        if (col.empleado === '257270' && col.liderId === '990002') {
+          calibracion.reunionLiderRealizada = true;
+          calibracion.acuerdosLiberados = true;
+          calibracion.fechaReunionLider = '2026-08-04';
+          calibracion.acuerdos = 'Maintain current strengths and follow up on agreed development priorities.';
+        }
         calibracion.historial.push({ campo: 'retroHabilitada', valorAnterior: false, valorNuevo: true, motivo: 'DO habilita fase de retroalimentación', usuario: 'Administrador DO', fecha: '2026-08-03', hora: '09:00' });
         if (nivelBajo) {
           db.areas_oportunidad.push({ id: nextId('AO'), colaboradorId: col.empleado, periodoId, area: 'Cumplimiento de objetivos y estándares de calidad', planMejora: 'Reforzar seguimiento semanal con su líder y revisar prioridades.' });
