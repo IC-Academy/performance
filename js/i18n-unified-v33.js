@@ -1,1 +1,0 @@
-(function(global){'use strict';const api={getLang:()=> 'en',setLang:()=> 'en',translateText:(text)=>String(text==null?'':text),applyTranslations:()=>{document.documentElement.lang='en';}};global.EDDI18N=api;})(window);
