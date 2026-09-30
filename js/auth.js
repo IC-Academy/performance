@@ -99,7 +99,7 @@
     };
     return {
       success: true,
-      message: 'Credenciales recibidas.',
+      message: 'Credentials received.',
       maskedEmail: null,
       requestId
     };

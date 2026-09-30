@@ -23,10 +23,10 @@
   function scoreRange(score) {
     const s = Number(score);
     if (s === 5) return '110% or more';
-    if (s === 4) return '100% a 109%';
-    if (s === 3) return '90% a 99%';
-    if (s === 2) return '75% a 89%';
-    if (s === 1) return 'menos de 75%';
+    if (s === 4) return '100% to 109%';
+    if (s === 3) return '90% to 99%';
+    if (s === 2) return '75% to 89%';
+    if (s === 1) return 'less than 75%';
     return '';
   }
 
@@ -41,7 +41,7 @@
       const score = strong ? num(text(strong).split('/')[0]) : null;
       if (!small || pct == null || score == null) return;
       const range = scoreRange(score);
-      small.innerHTML = `<b>${fmt(pct)}%</b> cae en <b>${range}</b>, por eso corresponde a <b>${score} ${score===1?'estrella':'estrellas'}</b>.`;
+      small.innerHTML = `<b>${fmt(pct)}%</b> falls in <b>${range}</b>, so it corresponds to <b>${score} ${score===1?'star':'stars'}</b>.`;
       scoreBox.classList.add('objective-score-explained-v23');
     });
   }
@@ -114,10 +114,10 @@
     if (!autoEval || !leaderEval) return null;
 
     const labels = {
-      A1:'Compromiso Organizacional', A2:'Actitud de Servicio', A3:'Trabajo en Equipo',
+      A1:'Organizational Commitment', A2:'Service Mindset', A3:'Teamwork',
       A4:'Effective Communication', A5:'Adaptability and Initiative', B1:'Role Mastery',
       B2:'Processes and Tools', B3:'Results Orientation', B4:'Planning and Organization',
-      B5:'Seguimiento y Control'
+      B5:'Follow-up and Control'
     };
     const dims = [];
     const auto = {}, leader = {};
@@ -127,8 +127,8 @@
       auto[key] = responseValue(autoEval.id, c.id);
       leader[key] = responseValue(leaderEval.id, c.id);
     });
-    const autoObj = avg((S.getGoals(autoEval.id)||[]).map(objectiveScore));
-    const leaderObj = avg((S.getGoals(leaderEval.id)||[]).map(objectiveScore));
+    const autoObj = avg((S.getObjetivos(autoEval.id)||[]).map(objectiveScore));
+    const leaderObj = avg((S.getObjetivos(leaderEval.id)||[]).map(objectiveScore));
     dims.push({key:'objetivos', label:'Goal Achievement', shortLabel:'Goals'});
     auto.objetivos = autoObj;
     leader.objetivos = leaderObj;
@@ -167,7 +167,7 @@
       <div class="performance-profile-head"><div><span class="admin-section-kicker">MULTIDIMENSIONAL VIEW</span><h2>Performance profile vs. ideal</h2><p>This view uses the same source and calculation as the manager comparison: competencies, consolidated B.2 tools, and goals from the evaluation record.</p></div><span class="calibration-source-badge-v23">SAME VIEW AS MANAGER</span></div>
       ${summaryStrip(data.autoProm,data.leaderProm)}
       ${wheel}
-      <details class="performance-summary-details"><summary>Ver resumen ejecutivo de 3 dimensiones</summary><div class="feedback-analysis-single"><div><h3>Radar ejecutivo</h3>${radar}</div></div></details>`;
+      <details class="performance-summary-details"><summary>View executive summary of 3 dimensions</summary><div class="feedback-analysis-single"><div><h3>Executive radar</h3>${radar}</div></div></details>`;
   }
 
   function enhance() {

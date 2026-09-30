@@ -119,7 +119,7 @@
         const key = dimensiones[i].key;
         const val = valores[key];
         const sinDatos = val === null || val === undefined || isNaN(val);
-        const title = dimensiones[i].label + ': ' + (sinDatos ? 'sin datos (N/A)' : fmt(val));
+        const title = dimensiones[i].label + ': ' + (sinDatos ? 'no data (N/A)' : fmt(val));
         return `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4" fill="${color}" stroke="#fff" stroke-width="1"><title>${esc(title)}</title></circle>`;
       }).join('');
       return `<polygon points="${ptsStr}" fill="${color}" fill-opacity="0.14" stroke="${color}" stroke-width="2"${dash ? ` stroke-dasharray="${dash}"` : ''}/>${circles}`;
@@ -231,9 +231,9 @@
   function leyendaEjes() {
     const c = C();
     return `<div class="ninebox-legend">
-      <p><strong>${esc(c.CONFIG_9BOX.ejeHorizontal)}</strong> (eje horizontal): Technical Knowledge and Skills (30%) + Goal Achievement (30%), convertido a base 100 sobre el bloque Technical and Functional (60%).</p>
-      <p><strong>${esc(c.CONFIG_9BOX.ejeVertical)}</strong> (eje vertical): se obtiene de la sección "Values and Attitude" (40%) y se convierte a base 100 multiplicando el promedio por 20.</p>
-      <p class="muted">Niveles por eje: ${c.CONFIG_9BOX.etiquetasNivel.join(' · ')} · Bajo &lt;60 · Medio 60–79 · Alto 80–100.</p>
+      <p><strong>${esc(c.CONFIG_9BOX.ejeHorizontal)}</strong> (horizontal axis): Technical Knowledge and Skills (30%) + Goal Achievement (30%), converted to base 100 over the Technical-functional block (60%).</p>
+      <p><strong>${esc(c.CONFIG_9BOX.ejeVertical)}</strong> (vertical axis): taken from the "Values and Attitude" section (40%) and converted to base 100 by multiplying the average by 20.</p>
+      <p class="muted">Levels per axis: ${c.CONFIG_9BOX.etiquetasNivel.join(' · ')} · Low &lt;60 · Medium 60–79 · High 80–100.</p>
     </div>`;
   }
 
@@ -266,7 +266,7 @@
   }
 
   /**
-   * renderNineBoxIndividual({ actitudProm, desempenoProm, nombreEmployee })
+   * renderNineBoxIndividual({ actitudProm, desempenoProm, nombreColaborador })
    * Matriz 9-box completa (9 cuadrantes visibles) con un nico marcador
    * destacado: la ubicacin del colaborador de la ficha actual. Reutiliza la
    * misma configuracin (CONFIG_9BOX / CUADRANTES_INFO) y el mismo grid core
@@ -276,7 +276,7 @@
     resultado = resultado || {};
     const c = C();
     const cuad = c.asignarCuadrante(resultado.actitudProm, resultado.desempenoProm);
-    const nombre = resultado.nombreEmployee || 'Employee';
+    const nombre = resultado.nombreColaborador || 'Employee';
     const ocupantes = cuad.cuadrante ? [{ empleado: 'actual', nombre, cuadrante: cuad.cuadrante, destacado: true }] : [];
     const gridHtml = renderNineBoxGridCore({ ocupantes, resaltarCuadrante: cuad.cuadrante, onCellClickJs: null, onMarkerClickJs: null });
     const niveles = c.CONFIG_9BOX.etiquetasNivel;
@@ -286,8 +286,8 @@
     return `<section class="ninebox-premium-card">
       <div class="ninebox-premium-head">
         <div>
-          <span class="ninebox-kicker">MATRIZ DE TALENTO</span>
-          <h3>Matriz 9-Box de Talento</h3>
+          <span class="ninebox-kicker">TALENT MATRIX</span>
+          <h3>9-Box Talent Matrix</h3>
           <p>Placement based on the balance between performance and attitude.</p>
         </div>
         ${info ? `<div class="ninebox-current-pill"><span class="ninebox-current-dot">⌖</span><div><small>Current placement</small><strong style="color:${info.color}">${cuad.cuadrante} · ${esc(info.nombre)}</strong></div></div>` : ''}
@@ -295,7 +295,7 @@
 
       <div class="ninebox-premium-layout">
         <div class="ninebox-matrix-panel">
-          <div class="ninebox-axis-title ninebox-axis-title-top">ACTITUD</div>
+          <div class="ninebox-axis-title ninebox-axis-title-top">ATTITUDE</div>
           <div class="ninebox-axis-levels-top"><span>${esc(niveles[0])}</span><span>${esc(niveles[1])}</span><span>${esc(niveles[2])}</span></div>
           <div class="ninebox-matrix-body">
             <div class="ninebox-y-title">PERFORMANCE</div>
@@ -307,15 +307,15 @@
         </div>
 
         <aside class="ninebox-insight-card ${info ? '' : 'is-empty'}">
-          ${info ? `<div class="ninebox-insight-title"><span class="ninebox-number-badge lg" style="background:${info.color}">${cuad.cuadrante}</span><div><h4>${esc(info.nombre)}</h4><small>Lectura del cuadrante</small></div></div>
+          ${info ? `<div class="ninebox-insight-title"><span class="ninebox-number-badge lg" style="background:${info.color}">${cuad.cuadrante}</span><div><h4>${esc(info.nombre)}</h4><small>Quadrant reading</small></div></div>
           <div class="ninebox-insight-section"><span>Description</span><p>${esc(info.significado)}</p></div>
-          <div class="ninebox-insight-section"><span>Enfoque sugerido</span><p>${esc(info.seguimiento)}</p></div>
+          <div class="ninebox-insight-section"><span>Suggested focus</span><p>${esc(info.seguimiento)}</p></div>
           <div class="ninebox-insight-note">The matrix is a reference for human review; it does not replace the judgment of Organizational Development or the manager.</div>` : '<p class="muted">The classification will appear when sufficient results are available.</p>'}
         </aside>
       </div>
 
       <div class="ninebox-profile-strip">
-        <div class="ninebox-profile-person"><span class="ninebox-avatar" style="${info ? `background:${info.color}` : ''}">${esc(inicial)}</span><div><small>Perfil actual</small><strong>${esc(nombre)}</strong></div></div>
+        <div class="ninebox-profile-person"><span class="ninebox-avatar" style="${info ? `background:${info.color}` : ''}">${esc(inicial)}</span><div><small>Current profile</small><strong>${esc(nombre)}</strong></div></div>
         <div class="ninebox-profile-metric"><span class="metric-icon">▥</span><div><small>Performance</small><strong>${fmt(resultado.desempenoProm)} / 5</strong></div></div>
         <div class="ninebox-profile-metric"><span class="metric-icon">◎</span><div><small>Attitude</small><strong>${fmt(resultado.actitudProm)} / 5</strong></div></div>
         <div class="ninebox-profile-metric"><span class="metric-icon">⌖</span><div><small>Current placement</small><strong style="${info ? `color:${info.color}` : ''}">${info ? `${cuad.cuadrante} · ${esc(info.nombre)}` : '—'}</strong></div></div>
@@ -334,11 +334,11 @@
       <div class="cuadrante-body">
         <div class="cuadrante-title-row">
           <div class="cuadrante-num" style="background:${cuad.info.color}">${cuad.cuadrante}</div>
-          <strong>${esc(cuad.info.nombre)}</strong> — <span class="muted">Prioridad: ${esc(cuad.info.prioridad)}</span>
+          <strong>${esc(cuad.info.nombre)}</strong> — <span class="muted">Priority: ${esc(cuad.info.prioridad)}</span>
         </div>
         <p>${esc(cuad.info.significado)}</p>
         <p><strong>Suggested action:</strong> ${esc(cuad.info.accion)}</p>
-        <p class="muted">Seguimiento: ${esc(cuad.info.seguimiento)}</p>
+        <p class="muted">Follow-up: ${esc(cuad.info.seguimiento)}</p>
       </div>
     </div>`;
   }
@@ -421,7 +421,7 @@
       return `<div class="performance-dimension-row ${cls}"><div><strong>${esc(d.label)}</strong><small>${lOk?`Manager ${fmt(l)}/5 · Ideal ${fmt(ideal)}/5`:'No manager evaluation'}</small></div><div class="performance-gap-values"><span>${gapIdeal===null?'—':`-${gapIdeal.toFixed(1)} ideal`}</span><b>${gapPerception===null?'—':`${gapPerception>0?'+':''}${gapPerception.toFixed(1)} perception`}</b></div></div>`;
     }).join('');
 
-    return `<div class="performance-wheel-wrap"><div class="performance-wheel-main">${svg}<div class="performance-wheel-legend"><span><i class="pw-dot auto"></i>Self-assessment</span><span><i class="pw-dot leader"></i>Manager evaluation</span><span><i class="pw-line ideal"></i>Expected ideal 5/5</span></div></div><div class="performance-wheel-side"><div class="performance-reading-note"><strong>How to read this profile</strong><p>La distancia al borde indica qué tan cerca está cada competencia del nivel ideal. La separación entre azul y naranja muestra la diferencia de perception entre colaborador y líder.</p></div><div class="performance-dimensions">${details}</div></div></div>`;
+    return `<div class="performance-wheel-wrap"><div class="performance-wheel-main">${svg}<div class="performance-wheel-legend"><span><i class="pw-dot auto"></i>Self-assessment</span><span><i class="pw-dot leader"></i>Manager evaluation</span><span><i class="pw-line ideal"></i>Expected ideal 5/5</span></div></div><div class="performance-wheel-side"><div class="performance-reading-note"><strong>How to read this profile</strong><p>The distance to the edge shows how close each competency is to the ideal level. The gap between blue and orange shows the difference in perception between employee and manager.</p></div><div class="performance-dimensions">${details}</div></div></div>`;
   }
 
   // ===========================================================================

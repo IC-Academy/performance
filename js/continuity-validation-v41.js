@@ -24,7 +24,7 @@
         } else if (!actions.length) {
           message = 'Select at least one recommended continuity action before submitting.';
           target = block.querySelector('.leader-continuity-actions');
-        } else if ((impact === 'High' || impact === 'Critical' || replacement === 'No identified replacement') && !(comment && comment.value.trim())) {
+        } else if ((impact === 'High' || impact === 'Critical' || impact === 'Alto' || impact === 'Crítico' || replacement === 'No identified replacement' || replacement === 'Sin reemplazo identificado') && !(comment && comment.value.trim())) {
           message = 'Add a confidential DO comment for the selected impact or lack of replacement.';
           target = comment;
         }

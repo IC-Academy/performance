@@ -7,7 +7,7 @@ Test domain: `performance.intercon.com.mx`
 ## Current status
 
 - IC Admin branding assets and interim hero artwork applied.
-- English is the default interface language.
+- The interface is English-only: all visible text is authored in English (the ES/EN toggle was removed). Internal stored values (statuses, roles, option values) keep their original identifiers and are displayed in English.
 - Feedback closure includes a manual Outlook Calendar link; no calendar event is created or saved by EDD. Existing meeting confirmation, agreement capture, and signature gates remain unchanged.
 - The Outlook action now opens a new event with the employee, review-cycle subject, and context prefilled; the manager still chooses the date/time and sends the invitation manually.
 - The Values and Attitude section visibly defines ESPÍRITU as Excellence, Service, Passion, Integrity, Respect, Innovation, Teamwork, and Unity.
