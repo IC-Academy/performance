@@ -49,7 +49,7 @@
   // v3 local demo: managers 20001/20002 also have their own employee record
   // and self-assessment. A clean namespace prevents an old browser seed from
   // hiding the newly accumulated profiles.
-  const STORAGE_KEY = 'edd_ic_admin_demo_db_v5_en';
+  const STORAGE_KEY = 'edd_ic_admin_demo_db_v6_complete_goals';
   let _db = null; // caché en memoria
 
   // ===========================================================================
@@ -139,7 +139,17 @@
         });
         const objetivos = D.generarObjetivos(perfilObjetivo.objetivos, col.empleado + tipo, null);
         objetivos.forEach((o, idx) => {
-          db.objetivos.push({ evaluacionId, index: idx, descripcion: o.descripcion, resultado: o.resultado, calificacion: o.calificacion });
+          db.objetivos.push({
+            evaluacionId,
+            index: idx,
+            descripcion: o.descripcion,
+            meta: o.meta,
+            resultado: o.resultado,
+            cumplimiento: o.cumplimiento,
+            cumplimientoAutomatico: o.cumplimientoAutomatico,
+            calificacion: o.calificacion,
+            calificacionAutomatica: o.calificacionAutomatica
+          });
         });
       }
       return evaluacionId;

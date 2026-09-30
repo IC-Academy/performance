@@ -283,11 +283,11 @@
   }
 
   const OBJETIVOS_MUESTRA = [
-    ['Reduce response time to internal requests by 15%.', 'Response time was reduced by 18%, exceeding the target.'],
-    ['Update 100% of the area files during the quarter.', '95% of the files were updated; 2 special cases remain pending.'],
-    ['Implement a monthly tracking dashboard for the team.', 'Dashboard implemented and in use since the second month of the period.'],
-    ['Train the team on the new operating procedure.', '100% of the team was trained and passed the knowledge assessment.'],
-    ['Reduce incidents reported by internal customers.', 'Incidents dropped from 12 to 6 during the evaluation period.']
+    { descripcion: 'Reduce response time to internal requests by 15%.', meta: 15, resultado: 18 },
+    { descripcion: 'Update 100% of the area files during the quarter.', meta: 100, resultado: 95 },
+    { descripcion: 'Implement one monthly tracking dashboard for the team.', meta: 1, resultado: 1 },
+    { descripcion: 'Train 100% of the team on the new operating procedure.', meta: 100, resultado: 100 },
+    { descripcion: 'Reduce incidents reported by internal customers to 6 or fewer.', meta: 6, resultado: 6 }
   ];
 
   function generarObjetivos(valorObjetivo, semillaTexto, cantidad) {
@@ -295,13 +295,17 @@
     const n = cantidad || (3 + Math.floor(rng() * 3)); // 3 a 5 objetivos
     const objetivos = [];
     for (let i = 0; i < Math.min(n, 5); i++) {
-      const variacion = (rng() - 0.5) * 1.2;
-      let v = Math.round(valorObjetivo + variacion);
-      v = Math.max(1, Math.min(5, v));
+      const muestra = OBJETIVOS_MUESTRA[i];
+      const cumplimiento = Math.round((muestra.resultado / muestra.meta) * 1000) / 10;
+      const calificacion = cumplimiento >= 110 ? 5 : cumplimiento >= 100 ? 4 : cumplimiento >= 90 ? 3 : cumplimiento >= 75 ? 2 : 1;
       objetivos.push({
-        descripcion: OBJETIVOS_MUESTRA[i][0],
-        resultado: OBJETIVOS_MUESTRA[i][1],
-        calificacion: v
+        descripcion: muestra.descripcion,
+        meta: muestra.meta,
+        resultado: muestra.resultado,
+        cumplimiento,
+        cumplimientoAutomatico: cumplimiento,
+        calificacion,
+        calificacionAutomatica: calificacion
       });
     }
     return objetivos;
