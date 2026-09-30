@@ -8,15 +8,8 @@
  * propia URL de API ni su propia clave de sessionStorage: todos leen de
  * APP_CONFIG.
  *
- * Dos modos soportados:
- *   - "demo": no hay backend. Usa datos simulados + localStorage, exactamente
- *     igual que en beta 1/beta 2. Es el modo por defecto.
- *   - "api": el frontend queda preparado para hablar con n8n (que a su vez
- *     habla con Airtable). Los endpoints se describen en api.js. Esta beta
- *     NO implementa n8n/Airtable reales: cambiar a "api" sin una URL válida
- *     en apiBaseUrl hará que las llamadas fallen con un error de red
- *     controlado (ver api.js), que es el comportamiento esperado hasta que
- *     exista el backend real.
+ * Produccion usa exclusivamente los webhooks ICA verificados en n8n. Las rutas
+ * viven en apiEndpoints para evitar URLs dispersas en el frontend.
  *
  * Para cambiar de modo en esta demo: editar APP_CONFIG.mode más abajo, o
  * ejecutar en la consola del navegador: APP_CONFIG.mode = "api" (el cambio
@@ -37,37 +30,54 @@
   'use strict';
 
   const APP_CONFIG = {
-    // IC Admin remains isolated in demo mode until its own backend and data
-    // environment are available. Never point this instance at the Mexico API.
-    mode: 'demo',
+    mode: 'api',
 
-    // Acceso temporal restringido para la revisión ejecutiva. La contraseña
-    // nunca se guarda en texto plano: auth.js compara SHA-256 de
-    // "numeroEmpleado:contraseña". Este control es solo para el entorno
-    // estático de revisión; producción deberá usar OTP o Entra ID SSO.
-    // Accesos UAT locales y desconectados. Solo se almacenan hashes SHA-256
-    // de numeroEmpleado:PIN; los PIN en claro no viven en el repositorio.
-    // Este mecanismo se elimina al activar OTP/SSO.
-    localDemoUsers: {
-      '267476': { credentialHash: '05195b438afd0cf63f78f5a3a95e23a34637cfa628233a994fab732e88fed219', displayName: 'José Antonio García Santiago', role: 'Colaborador', position: 'Officer Success Representative', area: 'Officer Success Department', capabilities: { isAdmin:false, canAdminister:false, canManage:false, canCalibrate:false, canViewAllEvaluations:false, canEvaluate:false, canSelfEvaluate:true } },
-      '266885': { credentialHash: 'f4a8fc53066ee30a23f76e427a5dee1ba85c0461ebf19149547026b1b02d05b5', displayName: 'Sara Margarita Santos Ochoa', role: 'Administrador', position: 'Project Operations Manager', area: 'Data Analytics', capabilities: { isAdmin:true, canAdminister:true, canManage:true, canCalibrate:true, canViewAllEvaluations:true, canEvaluate:true, canSelfEvaluate:true } },
-      '257270': { credentialHash: 'a50528c34230226f582c3569de1aaf0c5c1b4af89c1f916ff0772b2c231be79a', displayName: 'Deysi Salas Figueroa', role: 'Colaborador', position: 'Employee Assistance Team Lead', area: 'Employee Assistance / People Operations', capabilities: { isAdmin:false, canAdminister:false, canManage:false, canCalibrate:false, canViewAllEvaluations:false, canEvaluate:false, canSelfEvaluate:true } },
-      '267465': { credentialHash: '536c809e128b434d7fe2efd0eb91e9e99ec018fa5b57024d261c53807ffbc8aa', displayName: 'Gonzalo Rafael Peña Ortiz', role: 'Líder', position: 'Bill Specialist', area: 'Strategic Operations', capabilities: { isAdmin:false, canAdminister:false, canManage:true, canCalibrate:false, canViewAllEvaluations:false, canEvaluate:true, canSelfEvaluate:true } },
-      '260901': { credentialHash: 'cbcba44f719149c8cace431d38f27b46a8ae7e61c93a1a86eb4e8bb1305e238', displayName: 'Alejandro Herrera Leal', role: 'Líder', position: 'Supply Chain Senior Specialist III', area: 'Supply Chain', capabilities: { isAdmin:false, canAdminister:false, canManage:true, canCalibrate:false, canViewAllEvaluations:false, canEvaluate:true, canSelfEvaluate:true } },
-      '990001': { credentialHash: '7a8ca0c2f94314b024b399402419ba32bbc413b73a98124f7e69e655b6b17344', displayName: 'Monserrat Cayon', role: 'Administrador', position: 'UAT Full-Cycle Reviewer', area: 'IC Admin', capabilities: { isAdmin:true, canAdminister:true, canManage:true, canCalibrate:true, canViewAllEvaluations:true, canEvaluate:true, canSelfEvaluate:true } },
-      '990002': { credentialHash: '69d12034fb2bc4d5bbde1a53e470d5c534ec5ee93c4c1f335b308d360f3aa00d', displayName: 'Gabriel Sabogal', role: 'Administrador', position: 'VP Corporate LATAM / Managing Director México', area: 'General Management', capabilities: { isAdmin:true, canAdminister:true, canManage:true, canCalibrate:true, canViewAllEvaluations:true, canEvaluate:true, canSelfEvaluate:true } }
+    // Produccion autentica exclusivamente contra los workflows ICA. No se
+    // publican usuarios, hashes ni accesos locales de demostracion.
+    localDemoUsers: {},
+
+    // URL pública de webhooks. No contiene credenciales ni secretos.
+    apiBaseUrl: 'https://jmejiaromero.app.n8n.cloud/webhook',
+
+    // Unico mapa de rutas habilitadas en produccion. Las rutas dinamicas
+    // incluyen el webhookId que n8n exige antes de la ruta parametrizada.
+    apiEndpoints: {
+      authRequestCode: '/ic-admin/auth/request-code',
+      authVerifyCode: '/ic-admin/auth/verify-code',
+      authMe: '/ic-admin/auth/me',
+      authLogout: '/ic-admin/auth/logout',
+      evaluationsMine: '/ic-admin/evaluations/mine',
+      initializeMyEvaluation: '/ic-admin/evaluations/mine/initialize',
+      evaluationDetail: '/dcc98a8a-f131-4f86-8809-8feb5903de8e/ic-admin/evaluations/:evaluationId',
+      saveSelfDraft: '/f65f8103-b53c-4b4d-9006-d3d299efa261/ic-admin/evaluations/:evaluationId/self-draft',
+      submitSelf: '/32c614ca-8442-4935-b9f2-580ffe6a93bc/ic-admin/evaluations/:evaluationId/submit-self',
+      leaderTeam: '/ic-admin/leader/team',
+      saveLeaderDraft: '/d83afc7a-be9a-425d-bdd5-e53ddedb7f83/ic-admin/evaluations/:evaluationId/leader-draft',
+      submitLeader: '/59acff4b-d56b-43e4-a14d-d6c4d7e3104a/ic-admin/evaluations/:evaluationId/submit-leader',
+      adminCalibration: '/ic-admin/admin/calibration',
+      adminDashboard: '/ic-admin/admin/dashboard',
+      saveAdminCalibration: '/a21f9ae0-316c-4462-8c85-0ae9ab2c8b2c/ic-admin/admin/calibration/:evaluationId',
+      completeAdminCalibration: '/cba96b1a-2228-4749-8d60-4ed43b30e64a/ic-admin/admin/calibration/:evaluationId/complete',
+      releaseResult: '/cc9425a8-27b4-41e2-8cee-a00abfff919e/ic-admin/evaluations/:evaluationId/release-feedback',
+      getFeedback: '/cf2c1e2b-8e8f-4b2a-a111-0fcd3faeed77/ic-admin/evaluations/:evaluationId/feedback',
+      confirmFeedbackMeeting: '/98695289-ee08-473d-a135-85e5d8c247fa/ic-admin/feedback/:feedbackId/confirm-meeting',
+      saveFeedbackAgreements: '/c0c75e0e-f196-43a6-8926-2f44042c1093/ic-admin/feedback/:feedbackId/agreements',
+      releaseFeedbackForSignature: '/bc8e4a2f-da4c-4ec9-9341-e3c740a8dea0/ic-admin/feedback/:feedbackId/release-for-signature',
+      signFeedbackAsLeader: '/39f835ea-0726-47ac-9d5f-9e4c905236a3/ic-admin/feedback/:feedbackId/sign-leader',
+      signFeedbackAsEmployee: '/254f8087-1bdc-4fa3-8ce6-a46c38363e1c/ic-admin/feedback/:feedbackId/sign-employee',
+      smartObjective: null
     },
 
-    // Base de los webhooks de n8n. Sustituir por la URL real del entorno
-    // cuando exista. No se usa en modo "demo".
-    apiBaseUrl: '', // Disconnected while local testing is enabled.
+    features: {
+      postCalibrationEnabled: true
+    },
 
     // Clave usada en sessionStorage para guardar la sesión (token + usuario).
     // Ver auth.js. Se usa sessionStorage y no localStorage a propósito: el
     // token no debe sobrevivir a que el usuario cierre la pestaña/navegador.
     // Nueva clave para invalidar inmediatamente cualquier sesión creada por
     // los accesos demo anteriores.
-    sessionStorageKey: 'edd_ic_admin_local_uat_session_v2',
+    sessionStorageKey: 'edd_ic_admin_production_session_v1',
 
     // Tiempo máximo (ms) que api.js espera una respuesta antes de abortar la
     // petición y mostrar "Error de conexión".
@@ -81,18 +91,9 @@
     // tanto en modo demo como como valor por defecto si el backend no manda
     // "expiresIn".
     defaultSessionSeconds: 28800,
-    readApiEnabled: false,
+    readApiEnabled: true,
     testCaptureEnabled: false,
-    writeApiEnabled: false,
-
-    // Rutas dinámicas con webhookId: ya NO se leen desde aquí. Se
-    // hardcodearon directamente en api.js (mismo patrón que self-draft,
-    // submit-self, leader-draft, submit-leader, save/complete calibration),
-    // para evitar que este objeto quede en null silenciosamente y rompa un
-    // endpoint sin que nadie lo note. Ver api.js: releaseResult(),
-    // confirmFeedbackMeeting(), saveFeedbackAgreements(),
-    // releaseFeedbackForSignature(), signFeedbackAsLeader(),
-    // signFeedbackAsEmployee().
+    writeApiEnabled: true
   };
 
   global.APP_CONFIG = APP_CONFIG;

@@ -173,11 +173,32 @@
     return execute();
   }
 
-  // ===========================================================================
-  // ENDPOINTS PREVISTOS (ver README, sección "Endpoints previstos (n8n)")
-  // No es necesario que el backend ya exista para que el frontend quede
-  // preparado: estas funciones solo centralizan la forma de llamarlos.
-  // ===========================================================================
+  function endpointPath(name, params) {
+    const endpoints = getConfig().apiEndpoints || {};
+    const template = endpoints[name];
+    if (!template) {
+      throw new ApiError('unavailable', 'This feature is not available yet.', 501, { endpoint: name });
+    }
+    return String(template).replace(/:([A-Za-z0-9_]+)/g, function (_, key) {
+      if (!params || params[key] === undefined || params[key] === null || params[key] === '') {
+        throw new ApiError('configuration', 'Falta un identificador requerido para completar la solicitud.', 500, { endpoint: name, parameter: key });
+      }
+      return encodeURIComponent(String(params[key]));
+    });
+  }
+
+  function requestEndpoint(name, params, options) {
+    return apiRequest(endpointPath(name, params), options);
+  }
+
+  function unavailableEndpoint(name) {
+    try { endpointPath(name); }
+    catch (error) { return Promise.reject(error); }
+    return Promise.reject(new ApiError('unavailable', 'This feature is not available yet.', 501, { endpoint: name }));
+  }
+
+  // Los únicos endpoints activos son los declarados en APP_CONFIG.apiEndpoints.
+  // Esto evita que rutas heredadas o UUID de otros workflows se usen por error.
   const EDDApi = {
     ApiError,
     EVENTO_SESION_EXPIRADA,
@@ -186,107 +207,67 @@
 
     // --- Autenticación ---------------------------------------------------
     authRequestCode(numeroEmpleado) {
-      return apiRequest('/auth/request-code', { method: 'POST', auth: false, body: { numeroEmpleado } });
+      return requestEndpoint('authRequestCode', null, { method: 'POST', auth: false, body: { numeroEmpleado } });
     },
     authVerifyCode(numeroEmpleado, codigo, requestId) {
-      return apiRequest('/auth/verify-code', { method: 'POST', auth: false, body: { numeroEmpleado, codigo, requestId } });
+      return requestEndpoint('authVerifyCode', null, { method: 'POST', auth: false, body: { numeroEmpleado, codigo, requestId } });
     },
     authLogout() {
-      return apiRequest('/auth/logout', { method: 'POST' });
+      return requestEndpoint('authLogout', null, { method: 'POST' });
     },
     authMe(forceRefresh) {
-      return apiRequest('/auth/me', { method: 'GET', cacheMs: 60000, forceRefresh: !!forceRefresh, timeoutMs: 10000 });
+      return requestEndpoint('authMe', null, { method: 'GET', cacheMs: 60000, forceRefresh: !!forceRefresh, timeoutMs: 10000 });
     },
 
-    // --- Capa de lectura real (Backend Integration v1) -----------------------
-    evaluationsMine(forceRefresh) { return apiRequest('/evaluations/mine', { method: 'GET', cacheMs: 15000, forceRefresh: !!forceRefresh, timeoutMs: 12000 }); },
-    evaluationDetail(id, forceRefresh) { return apiRequest('/6f123813-cb2b-4698-af51-60fe95ca1b52/evaluations/' + encodeURIComponent(id), { method: 'GET', cacheMs: 30000, forceRefresh: !!forceRefresh, timeoutMs: 30000 }); },
-    leaderTeam(forceRefresh) { return apiRequest('/leader/team', { method: 'GET', cacheMs: 20000, forceRefresh: !!forceRefresh, timeoutMs: 12000 }); },
-    adminDashboard(forceRefresh) { return apiRequest('/admin/dashboard', { method: 'GET', cacheMs: 20000, forceRefresh: !!forceRefresh, timeoutMs: 15000 }); },
-    adminCalibration(forceRefresh) { return apiRequest('/admin/calibration', { method: 'GET', cacheMs: 15000, forceRefresh: !!forceRefresh, timeoutMs: 15000 }); },
-    // FIX (cierre E2E): faltaba el webhookId real de n8n en el path dinámico
-    // (mismo patrón que ya rompió self-draft/submit-self/leader-draft en su
-    // momento). Sin el webhookId, n8n devuelve 404 y el navegador nunca llega
-    // al workflow -> "No fue posible conectar con el servidor".
-    async saveAdminCalibration(evaluationId, payload) { const r=await apiRequest('/1ff38682-54db-4bc4-a8e5-4d6b9af56404/admin/calibration/' + encodeURIComponent(evaluationId), { method: 'PUT', body: payload, timeoutMs: 30000 }); clearReadCache('/admin/calibration'); return r; },
-    async completeAdminCalibration(evaluationId) { const r=await apiRequest('/61a9fc92-586b-4343-a783-e0ceb82ec52a/admin/calibration/' + encodeURIComponent(evaluationId) + '/complete', { method: 'POST', timeoutMs: 30000 }); clearReadCache('/admin/calibration'); clearReadCache('/admin/dashboard'); return r; },
-    async releaseResult(evaluationId) {
-      // FIX (verificación explícita): antes dependía de
-      // APP_CONFIG.endpointOverrides.releaseResultPath, que podía quedar
-      // null silenciosamente si alguien reseteaba config.js. URL real de
-      // n8n (workflow "EDD - Liberar Resultado", identificador = evaluationId,
-      // NUNCA feedbackId) verificada directamente contra la production URL
-      // del trigger: https://jmejiaromero.app.n8n.cloud/webhook/fa5dbc0a-401a-4db1-8f95-e480ab620cc7/evaluations/:evaluationId/release
-      const r = await apiRequest('/fa5dbc0a-401a-4db1-8f95-e480ab620cc7/evaluations/' + encodeURIComponent(evaluationId) + '/release', { method: 'POST', timeoutMs: 30000 });
-      clearReadCache(); return r;
-    },
+    // --- Lectura y escritura del ciclo completo ----------------------------
+    evaluationsMine(forceRefresh) { return requestEndpoint('evaluationsMine', null, { method: 'GET', cacheMs: 15000, forceRefresh: !!forceRefresh, timeoutMs: 12000 }); },
+    evaluationDetail(evaluationId, forceRefresh) { return requestEndpoint('evaluationDetail', { evaluationId }, { method: 'GET', cacheMs: 15000, forceRefresh: !!forceRefresh, timeoutMs: 15000 }); },
+    leaderTeam(forceRefresh) { return requestEndpoint('leaderTeam', null, { method: 'GET', cacheMs: 20000, forceRefresh: !!forceRefresh, timeoutMs: 12000 }); },
+    adminDashboard(forceRefresh) { return requestEndpoint('adminDashboard', null, { method: 'GET', cacheMs: 15000, forceRefresh: !!forceRefresh, timeoutMs: 15000 }); },
+    adminCalibration(forceRefresh) { return requestEndpoint('adminCalibration', null, { method: 'GET', cacheMs: 15000, forceRefresh: !!forceRefresh, timeoutMs: 15000 }); },
+    async saveAdminCalibration(evaluationId, payload) { const r=await requestEndpoint('saveAdminCalibration', { evaluationId }, { method: 'PUT', body: payload, timeoutMs: 30000 }); clearReadCache('/ic-admin/admin/calibration'); return r; },
+    async completeAdminCalibration(evaluationId) { const r=await requestEndpoint('completeAdminCalibration', { evaluationId }, { method: 'POST', timeoutMs: 30000 }); clearReadCache('/ic-admin/admin/calibration'); return r; },
 
-    // --- Retroalimentación y firmas ------------------------------------------
-    // FIX (cierre E2E): antes existía un único feedbackAction(key, evaluationId,
-    // payload) genérico que reemplazaba ':feedbackId' usando el valor de
-    // evaluationId — evaluationId y feedbackId NUNCA son el mismo identificador
-    // (feedbackId = ID de Retroalimentaciones, un registro aparte, distinto de
-    // la evaluación). Se reemplaza por 5 métodos explícitos, cada uno exige el
-    // identificador correcto por nombre — no hay forma de invocarlos con el ID
-    // equivocado sin que sea obvio en la firma de la función.
-    async confirmFeedbackMeeting(feedbackId) {
-      const r = await apiRequest('/f9620b5c-7fe4-4afc-a8d6-164bff48c1d1/feedback/' + encodeURIComponent(feedbackId) + '/confirm-meeting', { method: 'POST', timeoutMs: 30000 });
-      clearReadCache(); return r;
-    },
-    async saveFeedbackAgreements(feedbackId, payload) {
-      const r = await apiRequest('/31fcda18-e890-4da7-9d69-ad387e473f12/feedback/' + encodeURIComponent(feedbackId) + '/agreements', { method: 'PUT', body: payload, timeoutMs: 30000 });
-      clearReadCache(); return r;
-    },
-    async releaseFeedbackForSignature(feedbackId) {
-      const r = await apiRequest('/2e91868a-6fdb-428a-9a60-5f689316fd9f/feedback/' + encodeURIComponent(feedbackId) + '/release-for-signature', { method: 'POST', timeoutMs: 30000 });
-      clearReadCache(); return r;
-    },
-    async signFeedbackAsLeader(feedbackId, payload) {
-      const r = await apiRequest('/d02bdd76-e268-4d1f-adf3-f1afbc75be86/feedback/' + encodeURIComponent(feedbackId) + '/sign-leader', { method: 'POST', body: payload || undefined, timeoutMs: 30000 });
-      clearReadCache(); return r;
-    },
-    // NOTA: no existe un endpoint de "cierre" separado. La firma del
-    // colaborador (sign-employee) ES la acción de cierre: el workflow
-    // "EDD - Firmar Retroalimentación Colaborador" marca Estado de firma =
-    // 'Cerrada' Y cierra la evaluación (Estado general del proceso = 'closed')
-    // en la misma transacción. Confirmado por inspección directa del workflow.
-    async signFeedbackAsEmployee(feedbackId, payload) {
-      const r = await apiRequest('/770a2cff-b447-4880-9289-d6b024645df7/feedback/' + encodeURIComponent(feedbackId) + '/sign-employee', { method: 'POST', body: payload || undefined, timeoutMs: 30000 });
-      clearReadCache(); return r;
-    },
+    // --- Feedback, signatures and closure ----------------------------------
+    async releaseResult(evaluationId) { const r=await requestEndpoint('releaseResult', { evaluationId }, { method: 'POST', timeoutMs: 30000 }); clearReadCache(); return r; },
+    getFeedback(evaluationId, forceRefresh) { return requestEndpoint('getFeedback', { evaluationId }, { method: 'GET', cacheMs: 10000, forceRefresh: !!forceRefresh, timeoutMs: 15000 }); },
+    async confirmFeedbackMeeting(feedbackId) { const r=await requestEndpoint('confirmFeedbackMeeting', { feedbackId }, { method: 'POST', timeoutMs: 30000 }); clearReadCache(); return r; },
+    async saveFeedbackAgreements(feedbackId, payload) { const r=await requestEndpoint('saveFeedbackAgreements', { feedbackId }, { method: 'PUT', body: payload, timeoutMs: 30000 }); clearReadCache(); return r; },
+    async releaseFeedbackForSignature(feedbackId) { const r=await requestEndpoint('releaseFeedbackForSignature', { feedbackId }, { method: 'POST', timeoutMs: 30000 }); clearReadCache(); return r; },
+    async signFeedbackAsLeader(feedbackId, payload) { const r=await requestEndpoint('signFeedbackAsLeader', { feedbackId }, { method: 'POST', body: payload, timeoutMs: 30000 }); clearReadCache(); return r; },
+    async signFeedbackAsEmployee(feedbackId, payload) { const r=await requestEndpoint('signFeedbackAsEmployee', { feedbackId }, { method: 'POST', body: payload, timeoutMs: 30000 }); clearReadCache(); return r; },
 
-    // --- Capa de escritura real (Write API v1) ----------------------------
-    async initializeMyEvaluation() { const r=await apiRequest('/evaluations/mine/initialize', { method: 'POST' }); clearReadCache('/evaluations/'); return r; },
-    async saveSelfDraft(id, payload) { const r=await apiRequest('/28e6125b-64c9-453c-a100-8c77f8ee68b9/evaluations/' + encodeURIComponent(id) + '/self-draft', { method: 'PUT', body: payload, timeoutMs: 12000 }); clearReadCache('/evaluations/'); return r; },
-    async submitSelf(id) { const r=await apiRequest('/0a235f4f-46c5-4a9c-bce0-dae3c0a0ab23/evaluations/' + encodeURIComponent(id) + '/submit-self', { method: 'POST', timeoutMs: 12000 }); clearReadCache(); return r; },
-    async saveLeaderDraft(id, payload) { const r=await apiRequest('/d4a332bd-8994-4b3d-aaba-28f2b99aca0a/evaluations/' + encodeURIComponent(id) + '/leader-draft', { method: 'PUT', body: payload, timeoutMs: 30000 }); clearReadCache(); return r; },
-    async submitLeader(id) { const r=await apiRequest('/11eb53d4-a38a-4048-81e0-4705ebc57e56/evaluations/' + encodeURIComponent(id) + '/submit-leader', { method: 'POST', timeoutMs: 30000 }); clearReadCache(); return r; },
+    async initializeMyEvaluation() { const r=await requestEndpoint('initializeMyEvaluation', null, { method: 'POST' }); clearReadCache('/ic-admin/evaluations/'); return r; },
+    async saveSelfDraft(id, payload) { const r=await requestEndpoint('saveSelfDraft', { evaluationId:id }, { method: 'PUT', body: payload, timeoutMs: 12000 }); clearReadCache('/ic-admin/evaluations/'); return r; },
+    async submitSelf(id) { const r=await requestEndpoint('submitSelf', { evaluationId:id }, { method: 'POST', timeoutMs: 12000 }); clearReadCache(); return r; },
+    async saveLeaderDraft(id, payload) { const r=await requestEndpoint('saveLeaderDraft', { evaluationId:id }, { method: 'PUT', body: payload, timeoutMs: 30000 }); clearReadCache(); return r; },
+    async submitLeader(id) { const r=await requestEndpoint('submitLeader', { evaluationId:id }, { method: 'POST', timeoutMs: 30000 }); clearReadCache(); return r; },
 
     // Alias en español conservados para compatibilidad con código previo.
     evaluacionesMias() { return this.evaluationsMine(); },
     evaluacionPorId(id) { return this.evaluationDetail(id); },
-    autoevaluacionGuardar(id, payload) { return apiRequest('/autoevaluacion/' + encodeURIComponent(id) + '/guardar', { method: 'POST', body: payload }); },
-    autoevaluacionEnviar(id, payload) { return apiRequest('/autoevaluacion/' + encodeURIComponent(id) + '/enviar', { method: 'POST', body: payload }); },
+    autoevaluacionGuardar(id, payload) { return this.saveSelfDraft(id, payload); },
+    autoevaluacionEnviar(id) { return this.submitSelf(id); },
 
     // --- Líder ---------------------------------------------------------------
     liderEquipo() { return this.leaderTeam(); },
-    liderEvaluaciones() { return apiRequest('/lider/evaluaciones', { method: 'GET' }); },
-    liderEvaluacionPorId(id) { return apiRequest('/lider/evaluaciones/' + encodeURIComponent(id), { method: 'GET' }); },
-    liderEvaluacionGuardar(id, payload) { return apiRequest('/lider/evaluaciones/' + encodeURIComponent(id) + '/guardar', { method: 'POST', body: payload }); },
-    liderEvaluacionEnviar(id, payload) { return apiRequest('/lider/evaluaciones/' + encodeURIComponent(id) + '/enviar', { method: 'POST', body: payload }); },
+    liderEvaluaciones() { return this.leaderTeam(); },
+    liderEvaluacionPorId(id) { return this.evaluationDetail(id); },
+    liderEvaluacionGuardar(id, payload) { return this.saveLeaderDraft(id, payload); },
+    liderEvaluacionEnviar(id) { return this.submitLeader(id); },
 
     // --- Administrador ---------------------------------------------------
-    adminEvaluaciones() { return apiRequest('/admin/evaluaciones', { method: 'GET' }); },
-    adminCalibraciones() { return apiRequest('/admin/calibraciones', { method: 'GET' }); },
-    adminCalibracionGuardar(id, payload) { return apiRequest('/admin/calibraciones/' + encodeURIComponent(id) + '/guardar', { method: 'POST', body: payload }); },
-    adminCalibracionLiberar(id, payload) { return apiRequest('/admin/calibraciones/' + encodeURIComponent(id) + '/liberar', { method: 'POST', body: payload }); },
-    adminNineBox() { return apiRequest('/admin/nine-box', { method: 'GET' }); },
-    adminEnviarNotificacion(payload) { return apiRequest('/admin/notificaciones/enviar', { method: 'POST', body: payload }); },
+    adminEvaluaciones() { return this.adminDashboard(); },
+    adminCalibraciones() { return this.adminCalibration(); },
+    adminCalibracionGuardar(id, payload) { return this.saveAdminCalibration(id, payload); },
+    adminCalibracionLiberar(id) { return this.releaseResult(id); },
+    adminNineBox() { return this.adminDashboard(); },
+    adminEnviarNotificacion() { return unavailableEndpoint('adminNotification'); },
 
     // --- Retroalimentación -------------------------------------------------
-    retroalimentacionPorId(id) { return apiRequest('/retroalimentacion/' + encodeURIComponent(id), { method: 'GET' }); },
-    retroalimentacionGuardar(id, payload) { return apiRequest('/retroalimentacion/' + encodeURIComponent(id) + '/guardar', { method: 'POST', body: payload }); },
-    retroalimentacionCerrar(id, payload) { return apiRequest('/retroalimentacion/' + encodeURIComponent(id) + '/cerrar', { method: 'POST', body: payload }); },
+    retroalimentacionPorId(id) { return this.getFeedback(id); },
+    retroalimentacionGuardar(id, payload) { return this.saveFeedbackAgreements(id, payload); },
+    retroalimentacionCerrar(id, payload) { return this.signFeedbackAsEmployee(id, payload); },
 
     // --- Asistente de IA para objetivos SMART -------------------------------
     // Ver README, sección "Asistente de IA para objetivos SMART". El frontend
@@ -307,13 +288,7 @@
        * @returns {Promise<{success: boolean, data?: object, message?: string}>}
        */
       generateSmartObjective(idea, language, employeeContext) {
-        const body = { idea, language: language === 'en' ? 'en' : 'es' };
-        if (employeeContext && (employeeContext.position || employeeContext.area)) {
-          body.employeeContext = {};
-          if (employeeContext.position) body.employeeContext.position = employeeContext.position;
-          if (employeeContext.area) body.employeeContext.area = employeeContext.area;
-        }
-        return apiRequest('/ai/smart-objective', { method: 'POST', body });
+        return unavailableEndpoint('smartObjective');
       }
     }
   };

@@ -1,26 +1,48 @@
-# IC Admin Performance Evaluation
+# EDD IC Admin - Production
 
-Independent IC Admin adaptation of the Inter-Con EDD product foundation.
+Frontend oficial de la Evaluacion de Desempeno de IC Admin.
 
-Test domain: `performance.intercon.com.mx`
+- Dominio: `performance.intercon.com.mx`
+- Repositorio: `IC-Academy/performance`
+- Backend: webhooks ICA de n8n
+- Datos: base oficial ICA en Airtable, accedida unicamente desde n8n
+- Interfaz: English-only
 
-## Current status
+## Entornos
 
-- IC Admin branding assets and interim hero artwork applied.
-- The interface is English-only: all visible text is authored in English (the ES/EN toggle was removed). Internal stored values (statuses, roles, option values) keep their original identifiers and are displayed in English.
-- Feedback closure includes a manual Outlook Calendar link; no calendar event is created or saved by EDD. Existing meeting confirmation, agreement capture, and signature gates remain unchanged.
-- The Outlook action now opens a new event with the employee, review-cycle subject, and context prefilled; the manager still chooses the date/time and sends the invitation manually.
-- The Values and Attitude section visibly defines ESPÍRITU as Excellence, Service, Passion, Integrity, Respect, Innovation, Teamwork, and Unity.
-- The final calibration view compares the expected standard, calibrated employee result, area average, and company average on a common 0–100 scale.
-- Organizational Development (DO) replaces RH/HR in interface wording; existing data field identifiers are preserved.
-- The application remains isolated from the production backend while executive review is in progress.
-- The public demo banner, role shortcuts and test-case selector are disabled. Only the restricted administrator account can create a session.
-- The restricted account is identified as Gabriel Sabogal and receives administrator, management, calibration and full-evaluation visibility permissions. Its password is compared through a SHA-256 digest and is not stored in plaintext in the repository.
-- `apiBaseUrl` is intentionally empty during demo testing. Real OTP delivery, cross-device persistence, backend permissions, notification delivery and concurrent sessions are not validated by this local demo. Claude must restore an ICA-specific API base URL and configure API session/storage keys when the real backend is ready.
-- IC Admin uses separate browser storage and session keys.
-- The software catalog now uses Salesforce, Paycom, Concur, Excel, SharePoint, Planner, PowerPoint, IQ-iconiq and Other.
-- The final competency and software catalog is pending validation with Alejandrina Badillo (Technology).
+Produccion y staging comparten los contratos oficiales de n8n y la base ICA.
+El frontend de produccion tiene su propio dominio, CNAME y clave de sesion. El
+repositorio `IC-Academy/stg-performance` permanece como ambiente demo/UAT y
+los registros de prueba deben conservar su identificador correspondiente.
 
-## Isolation rule
+El navegador solo conoce URLs publicas de webhook. Las credenciales de n8n,
+Airtable y correo permanecen en n8n y nunca deben agregarse al repositorio.
 
-Do not connect this repository to the Mexico n8n/Airtable environment. Before enabling API mode, configure and validate an IC Admin-specific backend, data base, workflows, notification templates, and organizational structure.
+## Workflows conectados
+
+| Etapa | Workflow n8n | Funcion |
+| --- | --- | --- |
+| Auth | `Q0IRzBFT7Nv294uj` | Solicitud y validacion de OTP |
+| Session | `u3B2bfyLQG8q753C` | Sesion actual y cierre de sesion |
+| Evaluations | `hY2dNLQohQjtSywR` | Evaluaciones propias, inicializacion y detalle |
+| Self Draft + Submit Self | `CHfpfGZsWm6VdM0X` | Borrador y envio de autoevaluacion |
+| Leader Team | `oBe6PbQ96RRn2PnO` | Equipo del lider |
+| Leader Draft | `QZp9ZgYiUIA7jHSG` | Borrador de evaluacion del lider |
+| Submit Leader | `jLukVQ7mEqZIakUI` | Envio de evaluacion del lider |
+| Calibration | `HUIM6QuC2zegotXp` | Dashboard, borrador y cierre de calibracion |
+| Release Feedback | `knGxLWhucJFbWSGC` | Liberacion de resultados |
+| Feedback Detail | `vP1NLracbqPJ0St5` | Consulta de retroalimentacion |
+| Confirm Meeting | `a99US2aNsVvPqOpg` | Confirmacion de reunion |
+| Agreements | `ItMWIttPcrKjKok7` | Acuerdos de retroalimentacion |
+| Release Signature | `TlT9p4rmXS9D1vVT` | Liberacion para firmas |
+| Leader Signature | `6R8u2sozdZY2vkY4` | Firma del lider |
+| Employee Signature | `peSKWqQLdGRpSpqn` | Firma del colaborador y cierre |
+
+La configuracion central vive en `js/config.js`. El ciclo completo esta
+habilitado hasta retroalimentacion, acuerdos, firmas y cierre. No se incluyen
+credenciales ni accesos directos a Airtable en el frontend.
+
+## Validacion
+
+Las pruebas locales verifican la centralizacion de rutas, el aislamiento de la
+sesion de produccion, la cobertura English-only y las plantillas de correo.
