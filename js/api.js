@@ -177,7 +177,7 @@
     const endpoints = getConfig().apiEndpoints || {};
     const template = endpoints[name];
     if (!template) {
-      throw new ApiError('unavailable', 'This feature is not available yet.', 501, { endpoint: name });
+      throw new ApiError('unavailable', 'This stage is not connected in staging yet.', 501, { endpoint: name });
     }
     return String(template).replace(/:([A-Za-z0-9_]+)/g, function (_, key) {
       if (!params || params[key] === undefined || params[key] === null || params[key] === '') {
@@ -194,7 +194,7 @@
   function unavailableEndpoint(name) {
     try { endpointPath(name); }
     catch (error) { return Promise.reject(error); }
-    return Promise.reject(new ApiError('unavailable', 'This feature is not available yet.', 501, { endpoint: name }));
+    return Promise.reject(new ApiError('unavailable', 'This stage is not connected in staging yet.', 501, { endpoint: name }));
   }
 
   // Los únicos endpoints activos son los declarados en APP_CONFIG.apiEndpoints.
@@ -206,11 +206,11 @@
     clearReadCache,
 
     // --- Autenticación ---------------------------------------------------
-    authRequestCode(numeroEmpleado) {
-      return requestEndpoint('authRequestCode', null, { method: 'POST', auth: false, body: { numeroEmpleado } });
+    authRequestCode(email) {
+      return requestEndpoint('authRequestCode', null, { method: 'POST', auth: false, body: { email } });
     },
-    authVerifyCode(numeroEmpleado, codigo, requestId) {
-      return requestEndpoint('authVerifyCode', null, { method: 'POST', auth: false, body: { numeroEmpleado, codigo, requestId } });
+    authVerifyCode(code, requestId) {
+      return requestEndpoint('authVerifyCode', null, { method: 'POST', auth: false, body: { requestId, code } });
     },
     authLogout() {
       return requestEndpoint('authLogout', null, { method: 'POST' });
