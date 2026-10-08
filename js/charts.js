@@ -327,6 +327,11 @@
   // TARJETA DE SIGNIFICADO / ACCIN DE UN CUADRANTE (compartida)
   // ===========================================================================
   function renderCuadranteInfo(cuad) {
+    // A missing 9-box classification must never block feedback or signatures.
+    // Do not fabricate a quadrant when performance data is incomplete.
+    if (!cuad || !cuad.info) {
+      return `<div class="cuadrante-box"><div class="cuadrante-body"><strong>Performance classification unavailable</strong><p class="muted">A 9-Box classification is not available for this evaluation.</p></div></div>`;
+    }
     const icons = Icons();
     const icono = (icons && icons.SVG[cuad.cuadrante]) || '';
     return `<div class="cuadrante-box" style="border-color:${cuad.info.color}">
