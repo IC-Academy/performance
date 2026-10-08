@@ -721,12 +721,16 @@
     if (!detail || typeof detail !== 'object') return null;
     const ev = detail.evaluation || {};
     const roleKey = role === 'lider' ? 'leader' : 'self';
+    if (role === 'lider' && detail.leaderFeedback) {
+      const lf=detail.leaderFeedback;
+      return {globalScore:pickMetric(ev,['leaderResult']), attitude:pickMetric(lf,['attitude']), performance:pickMetric(lf,['performance']), source:'backend'};
+    }
     const candidates = [
       detail[roleKey + 'Result'], detail[roleKey + 'Metrics'], detail.results && detail.results[roleKey],
       ev[roleKey + 'Result'], ev[roleKey + 'Metrics'], ev[roleKey], ev
     ].filter(Boolean);
     for (const src of candidates) {
-      const globalScore = typeof src === 'number' ? src : pickMetric(src, ['selfResult','leaderResult','resultadoGlobalBackend','resultadoGlobal','globalResult','globalScore','score','Resultado global (backend)','Resultado Global Backend']);
+      const globalScore = typeof src === 'number' ? src : pickMetric(src, [role === 'lider' ? 'leaderResult' : 'selfResult','resultadoGlobalBackend','resultadoGlobal','globalResult','globalScore','score','Resultado global (backend)','Resultado Global Backend']);
       const attitude = pickMetric(src, ['actitudBackend','attitudeBackend','attitude','actitud','Actitud (backend)','Actitud Backend']);
       const performance = pickMetric(src, ['desempenoBackend','performanceBackend','performance','desempeno','Desempeño (backend)','Desempeno (backend)','Desempeño Backend']);
       if (globalScore !== null || attitude !== null || performance !== null) return { globalScore, attitude, performance, source:'backend' };
