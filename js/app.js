@@ -726,10 +726,13 @@
       ev[roleKey + 'Result'], ev[roleKey + 'Metrics'], ev[roleKey], ev
     ].filter(Boolean);
     for (const src of candidates) {
-      const globalScore = pickMetric(src, ['resultadoGlobalBackend','resultadoGlobal','globalResult','globalScore','score','Resultado global (backend)','Resultado Global Backend']);
+      const globalScore = typeof src === 'number' ? src : pickMetric(src, ['selfResult','leaderResult','resultadoGlobalBackend','resultadoGlobal','globalResult','globalScore','score','Resultado global (backend)','Resultado Global Backend']);
       const attitude = pickMetric(src, ['actitudBackend','attitudeBackend','attitude','actitud','Actitud (backend)','Actitud Backend']);
       const performance = pickMetric(src, ['desempenoBackend','performanceBackend','performance','desempeno','Desempeño (backend)','Desempeno (backend)','Desempeño Backend']);
       if (globalScore !== null || attitude !== null || performance !== null) return { globalScore, attitude, performance, source:'backend' };
+    }
+    if (role === 'lider' && detail.leaderFeedback) {
+      return { globalScore:pickMetric(ev,['leaderResult']), attitude:pickMetric(detail.leaderFeedback,['attitude']), performance:pickMetric(detail.leaderFeedback,['performance']), source:'backend' };
     }
     return null;
   }
@@ -858,8 +861,23 @@
     const local = getOrCreateLocalEvaluation(me.empleado, liderId, 'autoevaluacion', backendId, state.remote.mine.evaluation.state || state.remote.mine.evaluation.selfState);
     (d.answers || []).filter(a => !/l[ií]der|leader/i.test(String(a.evaluator || a.evaluador || ''))).forEach(a => mapRemoteAnswerToLocal(local.id, a));
     hydrateObjectives(local.id, d.objectives || [], false);
-    syncBackendResultsFromDetail(d, local, null);
-    hydrateRemoteFeedback(d, me.empleado, state.periodo.id, S.getEvaluacion(me.empleado, state.periodo.id, 'lider'));
+    // Only hydrate manager information explicitly released by the backend.
+    const visible = !!(d.access && d.access.leaderResultsVisible && d.access.resultsReleased);
+    const leaderData = visible ? (d.leaderFeedback || null) : null;
+    const leaderEv = visible ? getOrCreateLocalEvaluation(me.empleado, liderId, 'lider', (d.evaluation && d.evaluation.leaderEvaluationId) || '', (d.evaluation && d.evaluation.leaderStatus) || '') : null;
+    if (leaderEv) {
+      (d.answers || []).filter(a => /l[ií]der|leader/i.test(String(a.evaluator || a.evaluador || ''))).forEach(a => mapRemoteAnswerToLocal(leaderEv.id, a));
+      if (leaderData) {
+        leaderEv.fortalezas = leaderData.strengths || '';
+        leaderEv.oportunidadesDesarrollo = leaderData.developmentOpportunities || '';
+        leaderEv.debilidadesBrechas = leaderData.gaps || '';
+        leaderEv.riesgosAtencion = leaderData.risks || '';
+        leaderEv.comentarios = leaderData.leaderSummary || '';
+        S.persist();
+      }
+    }
+    syncBackendResultsFromDetail(d, local, leaderEv);
+    hydrateRemoteFeedback(d, me.empleado, state.periodo.id, leaderEv);
   }
   function selfDraftPayload(localEvalId, backendId) {
     const ev = S.load().evaluaciones.find(e => e.id === localEvalId) || {};
