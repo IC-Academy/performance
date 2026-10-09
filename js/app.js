@@ -3779,6 +3779,9 @@
       try {
         const resp = await A.verifyCode(codigo.trim());
         const appUser = A.getAppUser();
+        if (!appUser || !appUser.empleado) {
+          throw new global.EDDApi.ApiError('unauthorized', 'Unable to establish your session. Please request a new code.');
+        }
         limpiarPerfil(appUser);
         state.user = aplicarPerfilSeleccionado(appUser);
         S.addAudit(appUser.nombre, 'Sign in', 'usuarios', appUser.empleado, null, appUser.perfil);
