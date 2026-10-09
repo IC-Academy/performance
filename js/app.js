@@ -1139,6 +1139,11 @@
     state.user = session ? aplicarPerfilSeleccionado(A.getAppUser(session)) : null;
 
     if (!state.user) {
+      // A stale leader/admin hash must never remain active on the login screen.
+      // Replace the URL without triggering another hashchange/render cycle.
+      if (location.hash !== '#/') {
+        history.replaceState(history.state, '', location.pathname + location.search + '#/');
+      }
       state.remote = { ready: false, loading: false, error: null, me: null, mine: null, detail: null, detailLoading: false, team: null, dashboard: null, lastSync: null };
       // Si había sesión activa y ya no la hay (y no fue por un logout manual
       // que ya limpió el aviso), asumimos que expiró y lo mostramos en login.
