@@ -881,7 +881,7 @@
       }
     }
     syncBackendResultsFromDetail(d, local, leaderEv);
-    hydrateRemoteFeedback(d, me.empleado, state.periodo.id, leaderEv);
+    if (visible) hydrateRemoteFeedback(d, me.empleado, state.periodo.id, leaderEv);
   }
   function selfDraftPayload(localEvalId, backendId) {
     const ev = S.load().evaluaciones.find(e => e.id === localEvalId) || {};
@@ -1139,6 +1139,9 @@
     state.user = session ? aplicarPerfilSeleccionado(A.getAppUser(session)) : null;
 
     if (!state.user) {
+      if (location.hash !== '#/') {
+        history.replaceState(history.state, '', location.pathname + location.search + '#/');
+      }
       state.remote = { ready: false, loading: false, error: null, me: null, mine: null, detail: null, detailLoading: false, team: null, dashboard: null, lastSync: null };
       // Si había sesión activa y ya no la hay (y no fue por un logout manual
       // que ya limpió el aviso), asumimos que expiró y lo mostramos en login.

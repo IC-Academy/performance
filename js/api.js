@@ -97,14 +97,14 @@
 
     const headers = { 'Content-Type': 'application/json' };
     const isGet = method === 'GET';
-    const cKey = cacheKey(endpoint);
+    const requestToken = options.auth !== false ? getStoredToken() : null;
+    const cKey = cacheKey(endpoint) + ':' + JSON.stringify(requestToken);
     const cacheMs = isGet ? Number(options.cacheMs || 0) : 0;
     if (cacheMs > 0 && !options.forceRefresh) {
       const cached = readCache.get(cKey);
       if (cached && (Date.now() - cached.at) < cacheMs) return cached.data;
       if (inflight.has(cKey)) return inflight.get(cKey);
     }
-    const requestToken = options.auth !== false ? getStoredToken() : null;
     if (requestToken) headers['Authorization'] = 'Bearer ' + requestToken;
 
     const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
