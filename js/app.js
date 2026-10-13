@@ -428,7 +428,7 @@
     'Redistribuir responsabilidades':'Redistribute responsibilities','Ninguna acción inmediata':'No immediate action','Otra':'Other'
   };
   function optLabel(v) { return OPTION_EN[v] || EN[v] || v; }
-  const PROFILE_LABEL = { colaborador:'Employee', lider:'Manager', administrador:'Administrator' };
+  const PROFILE_LABEL = { colaborador:'Employee', lider:'Manager', administrador:'Administrator', calibrador:'Calibration' };
   function t(text) { return EN[text] || text; }
   function setLanguage() {
     currentLang = 'en';
@@ -567,10 +567,11 @@
     // canManage is a leader/team capability, not an administrator capability.
     // Treating it as admin promoted every leader to Admin and could leave the
     // local UAT router in an invalid profile/route loop after login.
-    const esAdmin = capBool(caps, ['isAdmin','canAdminister','canCalibrate','canViewAllEvaluations']) || base === 'administrador';
+    const esAdmin = capBool(caps, ['isAdmin','canAdminister','canViewAllEvaluations']) || base === 'administrador';
     const esLider = capBool(caps, ['canEvaluate','canEvaluateTeam','canLead','isLeader']) || base === 'lider';
     const esColaborador = capBool(caps, ['canSelfEvaluate','canSelfAssess','canSelfEvaluation','requiresEvaluation']) || base === 'colaborador';
     if (esAdmin) perfiles.push('administrador');
+    else if (caps.canCalibrate === true) perfiles.push('calibrador');
     if (esLider) perfiles.push('lider');
     if (esColaborador) perfiles.push('colaborador');
     return [...new Set(perfiles)];
@@ -999,6 +1000,7 @@
         if (apiEndpointEnabled('adminDashboard')) jobs.push(global.EDDApi.adminDashboard(!!force).then(r => { state.remote.dashboard = apiData(r); }));
         jobs.push(global.EDDApi.adminCalibration(!!force).then(r => { state.remote.calibration = apiData(r); }));
       }
+      if (state.user && state.user.perfil === 'calibrador') jobs.push(global.EDDApi.adminCalibration(!!force).then(r => { state.remote.calibration = apiData(r); }));
       await Promise.all(jobs);
 
       // El detalle completo cuesta ~10s en n8n/Airtable. Ya no se carga en el
@@ -1056,6 +1058,7 @@
   // navegación posterior al login/logout y el registro en auditoría local.
   // =========================================================================
   function irAHomeDePerfil(perfil) {
+    if (perfil === 'calibrador') { navigate('#/admin/calibracion'); return; }
     navigate(perfil === 'colaborador' ? '#/colaborador/bienvenida' : (perfil === 'lider' ? '#/lider/dashboard' : '#/admin/dashboard'));
   }
 
@@ -1095,6 +1098,7 @@
     const u = state.user;
     const perfiles = perfilesDisponibles(u);
     const cards = {
+      calibrador: { icon:'C', title:'Calibration', kicker:'ASSIGNED REVIEWS', desc:'', action:'Enter calibration' },
       administrador: { icon:'A', title:'Administrator', kicker:'CYCLE MANAGEMENT', desc:'Review overall progress, calibrate results, and manage the evaluation process.', action:'Enter as administrator' },
       lider: { icon:'L', title:'Manager', kicker:'TEAM MANAGEMENT', desc:'Evaluate your team, hold feedback sessions, and follow up on signatures and agreements.', action:'Enter as manager' },
       colaborador: { icon:'C', title:'Employee', kicker:'MY PERFORMANCE', desc:'Complete your self-assessment and review your results and personal feedback.', action:'Enter as employee' }
@@ -1218,6 +1222,8 @@
     } else if (u.perfil === 'lider') {
       tabs = [['dashboard', 'My team'], ['pendientes', 'Pending evaluations'], ['firmas', 'Pending signatures']];
       if (perfilesDisponibles(u).includes('colaborador')) tabs.unshift(['mi-inicio', 'My evaluation']);
+    } else if (u.perfil === 'calibrador') {
+      tabs = [['calibracion', 'Calibration']];
     } else {
       tabs = [['dashboard', 'Dashboard'], ['calibracion', 'Calibration'], ['9box', '9-Box Matrix'], ['usuarios', 'Users'], ['config', 'Settings']];
     }
@@ -2807,6 +2813,7 @@
   // PORTAL ADMINISTRADOR
   // =========================================================================
   function renderAdmin(page, param) {
+    if (state.user.perfil === 'calibrador' && page !== 'calibracion') { navigate('#/admin/calibracion'); return ''; }
     const periodoId = state.periodo.id;
     if (page === 'calibracion') return param ? viewCalibracionDetalle(param, periodoId) : viewCalibracionLista(periodoId);
     if (page === '9box') return view9BoxAdmin(periodoId);
@@ -3181,12 +3188,13 @@
       const pending = Array.isArray(queue.pending) ? queue.pending : [];
       const calibrated = Array.isArray(queue.calibrated) ? queue.calibrated : [];
       const closed = Array.isArray(queue.closed) ? queue.closed : [];
-      const rows = [...pending, ...calibrated, ...closed];
-      const statusLabel = (x) => x.status === 'pending_calibration' ? 'Pending calibration' : (x.status === 'closed' ? 'Closed' : 'Calibrated');
+      const waiting = Array.isArray(queue.waiting) ? queue.waiting : [];
+      const rows = [...pending, ...calibrated, ...closed, ...waiting];
+      const statusLabel = (x) => x.status === 'waiting_leader' ? 'Awaiting manager evaluation' : x.status === 'pending_calibration' ? 'Pending calibration' : (x.status === 'closed' ? 'Closed' : 'Calibrated');
       return `<section class="calibration-shell">
-        <div class="calibration-list-hero"><div><span class="admin-kicker">DO CALIBRATION</span><h1>Review and calibration</h1><p>Employees whose manager evaluation is ready for review and calibration appear here.</p></div><div class="calibration-list-stats"><div><strong>${pending.length}</strong><span>To review</span></div><div><strong>${calibrated.length}</strong><span>Calibrated</span></div></div></div>
+<div class="calibration-list-hero"><div><span class="admin-kicker">CALIBRATION</span><h1>Review and calibration</h1>${state.user.perfil === 'calibrador' ? '' : '<p>Employees whose manager evaluation is ready for review and calibration appear here.</p>'}</div><div class="calibration-list-stats">${state.user.perfil === 'calibrador' ? `<div><strong>${rows.length}</strong><span>Assigned</span></div>` : ''}<div><strong>${pending.length}</strong><span>To review</span></div><div><strong>${calibrated.length}</strong><span>Calibrated</span></div></div></div>
         <div class="calibration-card-list">
-        ${rows.map((x) => `<article class="calibration-person-card"><div class="calibration-avatar">${esc(x.name||'').split(' ').slice(0,2).map(v=>v[0]).join('')}</div><div class="calibration-person-main"><div class="calibration-person-title"><strong>${esc(x.name||x.employeeId)}</strong>${badge(statusLabel(x))}</div><span>${esc(x.position||'')} · ${esc(x.area||'')}</span><small>Manager: ${esc(x.leaderName||'—')}</small></div><div class="calibration-score"><span>Result</span><strong>${f1(x.calibratedResult ?? x.leaderResult)}</strong><small>${x.calibratedResult!=null?'Calibrated':'Manager'}</small></div><a class="btn btn-primary btn-sm" href="#/admin/calibracion/${encodeURIComponent(String(x.employeeId||''))}">${x.status==='pending_calibration'?'Calibrate':'Review'}</a></article>`).join('') || '<div class="admin-empty-state">No evaluations available for calibration.</div>'}
+        ${rows.map((x) => `<article class="calibration-person-card"><div class="calibration-avatar">${esc(x.name||'').split(' ').slice(0,2).map(v=>v[0]).join('')}</div><div class="calibration-person-main"><div class="calibration-person-title"><strong>${esc(x.name||x.employeeId)}</strong>${badge(statusLabel(x))}</div><span>${esc(x.position||'')} · ${esc(x.area||'')}</span><small>Manager: ${esc(x.leaderName||'—')}</small></div><div class="calibration-score"><span>Result</span><strong>${f1(x.calibratedResult ?? x.leaderResult)}</strong><small>${x.calibratedResult!=null?'Calibrated':'Manager'}</small></div>${x.status==='waiting_leader'?'':`<a class="btn btn-primary btn-sm" href="#/admin/calibracion/${encodeURIComponent(String(x.employeeId||''))}">${x.status==='pending_calibration'?'Calibrate':'Review'}</a>`}</article>`).join('') || '<div class="admin-empty-state">No evaluations available for calibration.</div>'}
         </div>
         <p class="backend-read-note">The queue updates as evaluations move through the process.</p>
       </section>`;
@@ -3198,6 +3206,10 @@
   }
 
   function viewCalibracionDetalle(colaboradorId, periodoId) {
+    if (state.user.perfil === 'calibrador') {
+      const q = state.remote.calibration || {};
+      if (![...(q.pending||[]), ...(q.calibrated||[]), ...(q.closed||[])].some(x=>String(x.employeeId)===String(colaboradorId))) return '<section class="calibration-shell"><h1>Evaluation unavailable</h1><a href="#/admin/calibracion">Back to calibration</a></section>';
+    }
     if (apiReadMode() && state.remote.calibration) {
       const q = state.remote.calibration;
       const item = [...(q.pending||[]), ...(q.calibrated||[]), ...(q.closed||[])].find(x => String(x.employeeId) === String(colaboradorId));
@@ -3340,7 +3352,7 @@
             <label class="calibration-field"><span>Adjustment justification <em>${Math.abs(currentCalibrated-Number(item.leaderResult))>0.0001?'required':'if you change the result'}</em></span><textarea id="calRemoteReason" ${calibrationDone?'disabled':''} placeholder="Describe the evidence and criteria used for the adjustment...">${esc(reason)}</textarea></label>
             <label class="calibration-field"><span>DO notes <em>optional</em></span><textarea id="calRemoteNotes" ${calibrationDone?'disabled':''} placeholder="Additional review context..."></textarea></label>
             <div class="calibration-state-note ${calibrationDone?'is-complete':calibrationDraft?'is-draft':''}">${calibrationDone?'✓ Calibration completed. The result is locked for this stage.':calibrationDraft?'Draft saved. You can keep adjusting or complete the calibration.':'No calibration has been saved yet.'}</div>
-            <div class="calibration-actions"><button class="btn btn-outline" id="calRemoteSaveBtn" ${calibrationDone?'disabled':''} onclick="App.guardarCalibracionRemota('${esc(item.evaluationId)}')">${state.remote.calibrationSaving?'Saving…':'Save draft'}</button><button class="btn btn-primary" id="calRemoteCompleteBtn" ${calibrationDone||state.remote.calibrationCompleting?'disabled':''} onclick="App.completarCalibracionRemota('${esc(item.evaluationId)}')">${calibrationDone?'✓ Calibration completed':state.remote.calibrationCompleting?'Completing…':'Complete calibration'}</button></div>${calibrationDone?`<div class="calibration-release-panel"><div><span class="admin-section-kicker">NEXT STAGE</span><h3>Feedback</h3><p>Calibration is closed. Release the result to start feedback and enable signature tracking.</p></div><button class="btn btn-primary" ${state.remote.calibrationReleasing?'disabled':''} onclick="App.liberarResultadoRemoto('${esc(item.evaluationId)}')">${state.remote.calibrationReleasing?'Releasing…':'Release for feedback'}</button></div>`:''}
+<div class="calibration-actions"><button class="btn btn-outline" id="calRemoteSaveBtn" ${calibrationDone?'disabled':''} onclick="App.guardarCalibracionRemota('${esc(item.evaluationId)}')">${state.remote.calibrationSaving?'Saving…':'Save draft'}</button><button class="btn btn-primary" id="calRemoteCompleteBtn" ${calibrationDone||state.remote.calibrationCompleting?'disabled':''} onclick="App.completarCalibracionRemota('${esc(item.evaluationId)}')">${calibrationDone?'✓ Calibration completed':state.remote.calibrationCompleting?'Completing…':'Complete calibration'}</button></div>${calibrationDone && state.user.perfil !== 'calibrador'?`<div class="calibration-release-panel"><div><span class="admin-section-kicker">NEXT STAGE</span><h3>Feedback</h3><p>Calibration is closed. Release the result to start feedback and enable signature tracking.</p></div><button class="btn btn-primary" ${state.remote.calibrationReleasing?'disabled':''} onclick="App.liberarResultadoRemoto('${esc(item.evaluationId)}')">${state.remote.calibrationReleasing?'Releasing…':'Release for feedback'}</button></div>`:''}
           </article>
         </section>`;
       }
@@ -3658,7 +3670,7 @@
       if (!apiReadMode() || state.remote.detailLoading || !evaluationId) return;
       state.remote.detailLoading = true; state.remote.detailError = null;
       try {
-        const detail = apiData(await global.EDDApi.evaluationDetail(evaluationId, true));
+        const detail = apiData(await (state.user.perfil === 'calibrador' ? global.EDDApi.calibrationDetail(evaluationId) : global.EDDApi.evaluationDetail(evaluationId, true)));
         state.remote.detail = detail; state.remote.detailRetry = 0;
         // Hidrata una copia local únicamente para reutilizar componentes visuales históricos;
         // la fuente de verdad sigue siendo backend y no se sustituye con datos demo.

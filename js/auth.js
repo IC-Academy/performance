@@ -181,7 +181,7 @@
     const rawCaps = data.capabilities || {};
     const role = String(data.platformRole || session.user.rol || '').toLowerCase();
     const caps = Object.assign({}, rawCaps, {
-      isAdmin: rawCaps.isAdmin === true || rawCaps.canAdminister === true || rawCaps.canCalibrate === true || role === 'administrador' || role === 'administrator' || role === 'admin',
+      isAdmin: rawCaps.isAdmin === true || rawCaps.canAdminister === true || role === 'administrador' || role === 'administrator' || role === 'admin',
       canEvaluate: rawCaps.canEvaluate === true || rawCaps.canEvaluateTeam === true || emp.canEvaluate === true || emp.canEvaluateTeam === true || emp.puedeEvaluar === true,
       canSelfEvaluate: rawCaps.canSelfEvaluate === true || rawCaps.canSelfAssess === true || rawCaps.requiresEvaluation === true || emp.canSelfEvaluate === true || emp.requiresEvaluation === true || emp.puedeAutoevaluarse === true || emp.requiereEvaluacion === true
     });
@@ -229,7 +229,7 @@
     const rawCaps = session.user.capabilities || {};
     const caps = Object.assign({}, rawCaps, {
       // canManage is a leader/team-management capability, not an Admin grant.
-      isAdmin: rawCaps.isAdmin === true || rawCaps.canAdminister === true || rawCaps.canCalibrate === true || rawCaps.canViewAllEvaluations === true,
+      isAdmin: rawCaps.isAdmin === true || rawCaps.canAdminister === true || rawCaps.canViewAllEvaluations === true,
       canEvaluate: rawCaps.canEvaluate === true || rawCaps.canEvaluateTeam === true || rawCaps.canLead === true || rawCaps.isLeader === true,
       canSelfEvaluate: rawCaps.canSelfEvaluate === true || rawCaps.canSelfAssess === true || rawCaps.canSelfEvaluation === true || rawCaps.requiresEvaluation === true
     });

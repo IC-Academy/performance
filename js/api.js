@@ -97,14 +97,14 @@
 
     const headers = { 'Content-Type': 'application/json' };
     const isGet = method === 'GET';
-    const cKey = cacheKey(endpoint);
+    const requestToken = options.auth !== false ? getStoredToken() : null;
+    const cKey = cacheKey(endpoint) + ':' + JSON.stringify(requestToken);
     const cacheMs = isGet ? Number(options.cacheMs || 0) : 0;
     if (cacheMs > 0 && !options.forceRefresh) {
       const cached = readCache.get(cKey);
       if (cached && (Date.now() - cached.at) < cacheMs) return cached.data;
       if (inflight.has(cKey)) return inflight.get(cKey);
     }
-    const requestToken = options.auth !== false ? getStoredToken() : null;
     if (requestToken) headers['Authorization'] = 'Bearer ' + requestToken;
 
     const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
@@ -146,6 +146,9 @@
       }
 
       let data = null;
+      if (isGet && options.auth !== false && getStoredToken() !== requestToken) {
+        throw new ApiError('stale-session', 'Your session changed. Please try again.', null);
+      }
       const raw = await response.text();
       if (raw) {
         try { data = JSON.parse(raw); }
@@ -224,7 +227,8 @@
     evaluationDetail(evaluationId, forceRefresh) { return requestEndpoint('evaluationDetail', { evaluationId }, { method: 'GET', cacheMs: 15000, forceRefresh: !!forceRefresh, timeoutMs: 15000 }); },
     leaderTeam(forceRefresh) { return requestEndpoint('leaderTeam', null, { method: 'GET', cacheMs: 20000, forceRefresh: !!forceRefresh, timeoutMs: 12000 }); },
     adminDashboard(forceRefresh) { return requestEndpoint('adminDashboard', null, { method: 'GET', cacheMs: 15000, forceRefresh: !!forceRefresh, timeoutMs: 15000 }); },
-    adminCalibration(forceRefresh) { return requestEndpoint('adminCalibration', null, { method: 'GET', cacheMs: 15000, forceRefresh: !!forceRefresh, timeoutMs: 15000 }); },
+    adminCalibration(forceRefresh) { return requestEndpoint('adminCalibration', null, { method: 'GET', cacheMs: 15000, forceRefresh: !!forceRefresh, timeoutMs: 45000 }); },
+    calibrationDetail(evaluationId) { return requestEndpoint('calibrationDetail', { evaluationId }, { method: 'GET', timeoutMs: 60000 }); },
     async saveAdminCalibration(evaluationId, payload) { const r=await requestEndpoint('saveAdminCalibration', { evaluationId }, { method: 'PUT', body: payload, timeoutMs: 30000 }); clearReadCache('/ic-admin/admin/calibration'); return r; },
     async completeAdminCalibration(evaluationId) { const r=await requestEndpoint('completeAdminCalibration', { evaluationId }, { method: 'POST', timeoutMs: 30000 }); clearReadCache('/ic-admin/admin/calibration'); return r; },
 
