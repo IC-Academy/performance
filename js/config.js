@@ -55,6 +55,7 @@
       saveLeaderDraft: '/d83afc7a-be9a-425d-bdd5-e53ddedb7f83/ic-admin/evaluations/:evaluationId/leader-draft',
       submitLeader: '/59acff4b-d56b-43e4-a14d-d6c4d7e3104a/ic-admin/evaluations/:evaluationId/submit-leader',
       adminCalibration: '/ic-admin/admin/calibration',
+      calibrationDetail: '/4cfa9af9-6e0f-4f12-946f-1c2f263009db/ic-admin/admin/calibration/:evaluationId/detail',
       adminDashboard: '/ic-admin/admin/dashboard',
       saveAdminCalibration: '/a21f9ae0-316c-4462-8c85-0ae9ab2c8b2c/ic-admin/admin/calibration/:evaluationId',
       completeAdminCalibration: '/cba96b1a-2228-4749-8d60-4ed43b30e64a/ic-admin/admin/calibration/:evaluationId/complete',
