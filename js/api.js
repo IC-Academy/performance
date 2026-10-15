@@ -225,7 +225,7 @@
     // --- Lectura y escritura del ciclo completo ----------------------------
     evaluationsMine(forceRefresh) { return requestEndpoint('evaluationsMine', null, { method: 'GET', cacheMs: 15000, forceRefresh: !!forceRefresh, timeoutMs: 12000 }); },
     evaluationDetail(evaluationId, forceRefresh) { return requestEndpoint('evaluationDetail', { evaluationId }, { method: 'GET', cacheMs: 15000, forceRefresh: !!forceRefresh, timeoutMs: 15000 }); },
-    leaderTeam(forceRefresh) { return requestEndpoint('leaderTeam', null, { method: 'GET', cacheMs: 20000, forceRefresh: !!forceRefresh, timeoutMs: 12000 }); },
+    leaderTeam(forceRefresh) { return requestEndpoint('leaderTeam', null, { method: 'GET', cacheMs: 20000, forceRefresh: !!forceRefresh, timeoutMs: 30000 }); },
     adminDashboard(forceRefresh) { return requestEndpoint('adminDashboard', null, { method: 'GET', cacheMs: 15000, forceRefresh: !!forceRefresh, timeoutMs: 15000 }); },
     adminCalibration(forceRefresh) { return requestEndpoint('adminCalibration', null, { method: 'GET', cacheMs: 15000, forceRefresh: !!forceRefresh, timeoutMs: 45000 }); },
     calibrationDetail(evaluationId) { return requestEndpoint('calibrationDetail', { evaluationId }, { method: 'GET', timeoutMs: 60000 }); },
