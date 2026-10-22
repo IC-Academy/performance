@@ -4176,30 +4176,44 @@
       if (state.remote.leaderSubmitting) return;
       if (!$('#confirmEnvioLider').checked) { showNotice('Confirm that the evaluation is complete before submitting.','warning'); return; }
       const evaluacionId = state.wizard.evaluacionId;
+      // Browser-restored checked stars may not yet exist in EDDStorage.
+      syncCheckedRatingsFromDom();
       for (let i = 0; i < SECCIONES_WIZARD.length - 1; i++) {
         const sec = SECCIONES_WIZARD[i];
-        let incompleta;
+        let missing = [];
         if (sec === 'objetivos') {
           const autoEval = S.getEvaluacion(colaboradorId, state.periodo.id, 'autoevaluacion');
           const evLider = S.load().evaluaciones.find((e) => e.id === evaluacionId);
           if (autoEval && autoEval.objetivosNoAplican) {
-            incompleta = !(evLider && evLider.objetivosNoAplicanConfirmados);
+            const decision = evLider?.objetivosNoAplicanDecision || (evLider?.objetivosNoAplicanConfirmados ? 'confirmado' : '');
+            const comment = !!String(evLider?.objetivosNoAplicanComentarioLider || '').trim();
+            if (decision === 'confirmado' && !comment) missing.push('N/A decision comment');
+            else if (decision === 'rechazado') {
+              const objs = S.getObjetivos(evaluacionId).filter(o => (o.descripcion || '').trim());
+              if (!comment || !objs.length || objs.some(o => !String(o.meta || '').trim() || !String(o.resultado || '').trim() || o.calificacion === '' || o.calificacion == null)) missing.push('rejected N/A objectives and comment');
+            } else if (decision !== 'confirmado') missing.push('N/A decision');
           } else {
-            const objetivosAuto = autoEval ? S.getObjetivos(autoEval.id).filter((o) => (o.descripcion || '').trim()) : [];
+            const objetivosAuto = autoEval ? S.getObjetivos(autoEval.id).filter(o => (o.descripcion || '').trim()) : [];
             const objetivosLider = S.getObjetivos(evaluacionId);
-            incompleta = objetivosAuto.some((oa) => {
-              const ol = objetivosLider.find((x) => Number(x.index) === Number(oa.index));
-              return !ol || ol.calificacion === '' || ol.calificacion === null || ol.calificacion === undefined || (ol.ajusteManualLider && !String(ol.justificacionLider || '').trim());
+            objetivosAuto.forEach((oa, idx) => {
+              const objectiveKey = String(oa.backendObjectiveId || '');
+              const byId = objectiveKey ? objetivosLider.find(x => String(x.backendObjectiveId || '') === objectiveKey) : null;
+              const ol = byId || objetivosLider.find(x => Number.isFinite(Number(x.index)) && Number(x.index) === Number(oa.index));
+              // Never accept a different goal silently; emit an actionable message.
+              if (!ol || ol.calificacion === '' || ol.calificacion == null ||
+                  (ol.ajusteManualLider && !String(ol.justificacionLider || '').trim()))
+                missing.push('goal ' + (idx + 1));
             });
           }
         } else {
-          incompleta = (S.getRespuestasPorSeccion(evaluacionId)[sec] || []).filter((r) => r.valor !== '' && r.valor !== null && r.valor !== undefined).length < D.COMPETENCIAS[sec].length;
+          const answered = new Map((S.getRespuestasPorSeccion(evaluacionId)[sec] || []).map(r => [String(r.competenciaId), r.valor]));
+          missing = (D.COMPETENCIAS[sec] || []).filter(c => !answered.has(String(c.id)) || answered.get(String(c.id)) === '' || answered.get(String(c.id)) == null).map(c => String(c.id));
         }
-        if (incompleta) {
+        if (missing.length) {
           state.wizard.seccionIdx = i; render();
           setTimeout(() => {
-            const n = validarSeccionVisual(evaluacionId, sec);
-            showNotice('You cannot submit. Review the fields marked in red.','warning');
+            validarSeccionVisual(evaluacionId, sec);
+            showNotice('Cannot submit: ' + sec + ' — check ' + missing.join(', ') + '.', 'warning');
           }, 0);
           return;
         }
