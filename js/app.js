@@ -4178,6 +4178,13 @@
       const evaluacionId = state.wizard.evaluacionId;
       // Browser-restored checked stars may not yet exist in EDDStorage.
       syncCheckedRatingsFromDom();
+      // B2 is a computed tools average, not an independent star rating.
+      // Restored drafts may contain tool selections without the derived B2 answer.
+      const toolsB2 = Object.values(S.getHerramientasEvaluacion(evaluacionId) || {});
+      const numericToolsB2 = toolsB2.filter(v => v !== '' && v !== null && v !== undefined && v !== 'N/A').map(Number).filter(Number.isFinite);
+      if (numericToolsB2.length) {
+        S.saveRespuesta(evaluacionId, 'habilidades', 'B2', C.round1(numericToolsB2.reduce((a, b) => a + b, 0) / numericToolsB2.length), '');
+      }
       for (let i = 0; i < SECCIONES_WIZARD.length - 1; i++) {
         const sec = SECCIONES_WIZARD[i];
         let missing = [];
