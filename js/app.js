@@ -4214,7 +4214,18 @@
           }
         } else {
           const answered = new Map((S.getRespuestasPorSeccion(evaluacionId)[sec] || []).map(r => [String(r.competenciaId), r.valor]));
-          missing = (D.COMPETENCIAS[sec] || []).filter(c => !answered.has(String(c.id)) || answered.get(String(c.id)) === '' || answered.get(String(c.id)) == null).map(c => String(c.id));
+          missing = (D.COMPETENCIAS[sec] || []).filter(c => {
+            if (sec === 'habilidades' && String(c.id).toUpperCase() === 'B2') {
+              // B2 is derived from rated tools, not a standalone competency answer.
+              // Do not reject a valid tool selection because the cached B2 answer is absent.
+              const tools = S.getHerramientasEvaluacion(evaluacionId) || {};
+              const values = HERRAMIENTAS_B2.map(([id]) => tools[id])
+                .filter(v => v !== '' && v !== null && v !== undefined && v !== 'N/A')
+                .map(Number).filter(v => Number.isFinite(v) && v >= 1 && v <= 5);
+              return values.length === 0;
+            }
+            return !answered.has(String(c.id)) || answered.get(String(c.id)) === '' || answered.get(String(c.id)) == null;
+          }).map(c => String(c.id));
         }
         if (missing.length) {
           state.wizard.seccionIdx = i; render();
