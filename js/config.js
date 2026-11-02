@@ -54,6 +54,7 @@
       leaderTeam: '/ic-admin/leader/team',
       saveLeaderDraft: '/d83afc7a-be9a-425d-bdd5-e53ddedb7f83/ic-admin/evaluations/:evaluationId/leader-draft',
       submitLeader: '/59acff4b-d56b-43e4-a14d-d6c4d7e3104a/ic-admin/evaluations/:evaluationId/submit-leader',
+      leaderSelfAssessment: '/2986a777-f7c1-4cc1-b197-3da0bc3be1b9/ic-admin/uat/evaluations/:evaluationId/self-assessment',
       adminCalibration: '/ic-admin/admin/calibration',
       calibrationDetail: '/4cfa9af9-6e0f-4f12-946f-1c2f263009db/ic-admin/admin/calibration/:evaluationId/detail',
       adminDashboard: '/ic-admin/admin/dashboard',
