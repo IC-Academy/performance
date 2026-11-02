@@ -243,7 +243,7 @@
     async signFeedbackAsEmployee(feedbackId, payload) { const r=await requestEndpoint('signFeedbackAsEmployee', { feedbackId }, { method: 'POST', body: payload, timeoutMs: 30000 }); clearReadCache(); return r; },
 
     async initializeMyEvaluation() { const r=await requestEndpoint('initializeMyEvaluation', null, { method: 'POST' }); clearReadCache('/ic-admin/evaluations/'); return r; },
-    async saveSelfDraft(id, payload) { const r=await requestEndpoint('saveSelfDraft', { evaluationId:id }, { method: 'PUT', body: payload, timeoutMs: 12000 }); clearReadCache('/ic-admin/evaluations/'); return r; },
+    async saveSelfDraft(id, payload) { const r=await requestEndpoint('saveSelfDraft', { evaluationId:id }, { method: 'PUT', body: payload, timeoutMs: 45000 }); clearReadCache('/ic-admin/evaluations/'); return r; },
     async submitSelf(id) { const r=await requestEndpoint('submitSelf', { evaluationId:id }, { method: 'POST', timeoutMs: 12000 }); clearReadCache(); return r; },
     async saveLeaderDraft(id, payload) { const r=await requestEndpoint('saveLeaderDraft', { evaluationId:id }, { method: 'PUT', body: payload, timeoutMs: 30000 }); clearReadCache(); return r; },
     async submitLeader(id) { const r=await requestEndpoint('submitLeader', { evaluationId:id }, { method: 'POST', timeoutMs: 30000 }); clearReadCache(); return r; },
