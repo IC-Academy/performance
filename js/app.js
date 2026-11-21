@@ -2443,6 +2443,12 @@
         <div class="feedback-group-card"><span class="admin-section-kicker">YOUR CLASSIFICATION</span>${renderCuadranteInfo(cuad)}</div>
       </div>
       ${(()=>{const ae=S.getEvaluacion(col.empleado,periodoId,'autoevaluacion'),le=S.getEvaluacion(col.empleado,periodoId,'lider');if(!ae||!le)return '';const ao=S.getObjetivos(ae.id),lo=S.getObjetivos(le.id).filter(o=>o.ajusteManualLider);return lo.length?`<section class="feedback-objective-adjustments"><div class="feedback-section-title"><span>OBJECTIVES</span><h3>Adjustments made by your manager</h3><p>When your manager's rating differs from the automatic equivalence, you can review the recorded reason here.</p></div>${lo.map(o=>{const a=ao.find(x=>Number(x.index)===Number(o.index));return `<article class="objective-adjustment-card"><div><strong>${esc(a?.descripcion||o.descripcion||'Objective')}</strong><span class="objective-score-change">Achievement ${esc(a?.cumplimiento??'—')}% → Manager ${esc(o.cumplimiento??'—')}% · Equivalence ${esc(o.calificacionAutomatica??a?.calificacion??'—')}/5 → ${esc(o.calificacion)}/5</span></div><p><b>Manager justification:</b> ${esc(o.justificacionLider||'No justification recorded.')}</p></article>`}).join('')}</section>`:''})()}
+      <section class="performance-profile-section">
+        <div class="performance-profile-head"><div><span class="admin-section-kicker">SELF-ASSESSMENT VS MANAGER</span><h3>Performance comparison</h3><p>Your self-assessment is shown for reference only. The official score and 9-Box classification use the manager's evaluation exclusively.</p></div></div>
+        ${renderSectionGapSummary(resAuto,resLider)}
+        ${performanceWheelHtml}
+        <details class="performance-summary-details"><summary>View comparison radar</summary><div class="feedback-analysis-single"><div><h3>Self-assessment and manager evaluation</h3>${radarHtml}</div></div></details>
+      </section>
       <section class="feedback-agreements"><div class="feedback-section-title"><span>MANAGER ASSESSMENT</span><h3>Manager's evaluation and comments</h3></div>
         <div class="agreement-grid">
           <article><h4>Strengths</h4><p>${esc(liderEval ? liderEval.fortalezas : '') || '<span class="muted">Not recorded.</span>'}</p></article>
