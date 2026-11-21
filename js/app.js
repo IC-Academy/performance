@@ -2336,8 +2336,10 @@
     if(!resAuto||!resLider) return '';
     const sections=[['actitud','Values and attitude'],['habilidades','Technical-functional'],['objetivos','Objectives']];
     return `<div class="performance-summary-strip">${sections.map(([k,label])=>{
-      const a=Number((resAuto?.promedios || {})[k]), l=Number((resLider?.promedios || {})[k]);
-      const lOk=Number.isFinite(l), aOk=Number.isFinite(a);
+      const rawA=(resAuto?.promedios || {})[k], rawL=(resLider?.promedios || {})[k];
+      const a=(rawA===null||rawA===undefined||rawA==='')?null:Number(rawA);
+      const l=(rawL===null||rawL===undefined||rawL==='')?null:Number(rawL);
+      const lOk=l!==null&&Number.isFinite(l), aOk=a!==null&&Number.isFinite(a);
       const idealGap=lOk?5-l:null, perception=(aOk&&lOk)?a-l:null;
       const cls=idealGap===null?'neutral':idealGap<=.5?'good':idealGap<=1.25?'mid':'attention';
       return `<article class="performance-summary-card ${cls}"><span>${esc(label)}</span><strong>${lOk?l.toFixed(1):'—'}<small>/5 manager</small></strong><div><b>${idealGap===null?'—':`${idealGap.toFixed(1)} pts below ideal`}</b><em>${perception===null?'—':`${perception>0?'+':''}${perception.toFixed(1)} self vs manager`}</em></div></article>`;
@@ -2401,11 +2403,12 @@
         </div>`;
       }
       const val = puntajes[s];
-      const pctVal = (val !== undefined && val !== null && meta.peso) ? (val / meta.peso) * 100 : 0;
-      return `<div class="seccion-card">
+      const hasSectionScore = val !== undefined && val !== null && val !== '' && Number.isFinite(Number(val));
+      const pctVal = hasSectionScore && meta.peso ? (Number(val) / meta.peso) * 100 : null;
+      return `<div class="seccion-card ${hasSectionScore ? '' : 'seccion-card-pending'}">
         <div class="seccion-card-title">${esc(meta.titulo)} <span class="peso-tag">${meta.peso}%</span></div>
-        ${progressBar(pctVal)}
-        <div class="seccion-card-val">${f1(val)} of ${meta.peso} pts · average ${f1(promedios[s])}/5</div>
+        ${hasSectionScore ? progressBar(pctVal) : '<div class="seccion-card-val">Section result pending verification — no score displayed</div>'}
+        ${hasSectionScore ? `<div class="seccion-card-val">${f1(val)} of ${meta.peso} pts · average ${f1(promedios[s])}/5</div>` : ''}
       </div>`;
     }).join('');
 
