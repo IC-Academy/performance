@@ -2358,7 +2358,7 @@
     const liderEval = S.getEvaluacion(col.empleado, periodoId, 'lider');
     const resAuto = S.getUltimoResultadoPorOrigen(col.empleado, periodoId, 'autoevaluacion');
     const resLider = S.getUltimoResultadoPorOrigen(col.empleado, periodoId, 'lider');
-    const totalFinalRaw = cal ? cal.resultadoCalibrado : (resLider ? resLider?.puntajes?.total : null);
+    const totalFinalRaw = resLider ? resLider?.puntajes?.total : null;
     // El backend devuelve el resultado global en escala 1-5. La ficha ejecutiva
     // y sus bandas de desempeño trabajan en 0-100; normalizamos aquí para no
     // mostrar 4.4 como si fuera 4.4%.
@@ -2380,7 +2380,7 @@
     const radarHtml = global.EDDCharts.renderRadarChart({
       autoevaluacion: resAuto?.promedios || null,
       evaluacionLider: resLider?.promedios || null,
-      calibracion: (cal && cal.resultadoCalibrado !== undefined && resLider) ? { resultadoLider: resLider?.puntajes?.total, resultadoCalibrado: cal.resultadoCalibrado } : null
+      calibracion: null
     });
     const ninaBoxHtml = global.EDDCharts.renderNineBoxIndividual({
       actitudProm: resLider?.promedios?.actitud ?? null,
@@ -2390,7 +2390,7 @@
     const performanceProfile = buildPerformanceProfile(col.empleado, periodoId);
     const performanceWheelHtml = performanceProfile ? global.EDDCharts.renderPerformanceWheel(performanceProfile) : '';
 
-    const objetivosNA = !!(liderEval?.objetivosNoAplicanConfirmados || liderEval?.objetivosNoAplicanDecision === 'confirmado');
+    const objetivosNA = !!(liderEval?.objetivosNoAplicanConfirmados || liderEval?.objetivosNoAplican || liderEval?.objetivosNoAplicanDecision === 'confirmado');
     const seccionesCards = ['actitud', 'habilidades', 'objetivos'].map((s) => {
       const meta = D.SECCIONES_META[s];
       if (s === 'objetivos' && objetivosNA) {
@@ -2401,6 +2401,7 @@
         </div>`;
       }
       const val = puntajes[s];
+      if (val === undefined || val === null || !Number.isFinite(Number(val))) return `<div class="seccion-card"><div class="seccion-card-title">${esc(meta.titulo)}</div><div class="seccion-card-val">Not available</div></div>`;
       const pctVal = (val !== undefined && val !== null && meta.peso) ? (val / meta.peso) * 100 : 0;
       return `<div class="seccion-card">
         <div class="seccion-card-title">${esc(meta.titulo)} <span class="peso-tag">${meta.peso}%</span></div>
@@ -2441,32 +2442,16 @@
         <div><h3>9-Box Matrix</h3>${ninaBoxHtml}</div>
         <div class="feedback-group-card"><span class="admin-section-kicker">YOUR CLASSIFICATION</span>${renderCuadranteInfo(cuad)}</div>
       </div>
-      <section class="performance-profile-section">
-        <div class="performance-profile-head"><div><span class="admin-section-kicker">PERFORMANCE PROFILE</span><h3>Multidimensional view</h3><p>Compare your self-perception, your manager's evaluation, and the distance to the expected ideal level.</p></div></div>
-        ${renderSectionGapSummary(resAuto,resLider)}
-        ${performanceWheelHtml}
-        <details class="performance-summary-details"><summary>View summary of the 3 dimensions</summary><div class="feedback-analysis-single"><div><h3>Executive radar</h3>${radarHtml}</div></div></details>
-      </section>
-
       ${(()=>{const ae=S.getEvaluacion(col.empleado,periodoId,'autoevaluacion'),le=S.getEvaluacion(col.empleado,periodoId,'lider');if(!ae||!le)return '';const ao=S.getObjetivos(ae.id),lo=S.getObjetivos(le.id).filter(o=>o.ajusteManualLider);return lo.length?`<section class="feedback-objective-adjustments"><div class="feedback-section-title"><span>OBJECTIVES</span><h3>Adjustments made by your manager</h3><p>When your manager's rating differs from the automatic equivalence, you can review the recorded reason here.</p></div>${lo.map(o=>{const a=ao.find(x=>Number(x.index)===Number(o.index));return `<article class="objective-adjustment-card"><div><strong>${esc(a?.descripcion||o.descripcion||'Objective')}</strong><span class="objective-score-change">Achievement ${esc(a?.cumplimiento??'—')}% → Manager ${esc(o.cumplimiento??'—')}% · Equivalence ${esc(o.calificacionAutomatica??a?.calificacion??'—')}/5 → ${esc(o.calificacion)}/5</span></div><p><b>Manager justification:</b> ${esc(o.justificacionLider||'No justification recorded.')}</p></article>`}).join('')}</section>`:''})()}
-      <section class="feedback-agreements"><div class="feedback-section-title"><span>FEEDBACK AGREEMENTS</span><h3>What was agreed for your development</h3></div>
+      <section class="feedback-agreements"><div class="feedback-section-title"><span>MANAGER ASSESSMENT</span><h3>Manager's evaluation and comments</h3></div>
         <div class="agreement-grid">
           <article><h4>Strengths</h4><p>${esc(liderEval ? liderEval.fortalezas : '') || '<span class="muted">Not recorded.</span>'}</p></article>
           <article><h4>Development opportunities</h4><p>${esc(liderEval ? liderEval.oportunidadesDesarrollo : '') || '<span class="muted">Not recorded.</span>'}</p></article>
           <article><h4>Gaps to address</h4><p>${esc(liderEval ? liderEval.debilidadesBrechas : '') || '<span class="muted">Not recorded.</span>'}</p></article>
-          <article><h4>Risks or points of attention</h4><p>${esc(liderEval ? liderEval.riesgosAtencion : '') || '<span class="muted">Not recorded.</span>'}</p></article>
           <article class="span-2"><h4>Manager summary</h4><p>${esc(liderEval ? liderEval.comentarios : '') || '<span class="muted">No comments recorded.</span>'}</p></article>
           <article class="span-2"><h4>Development opportunities and improvement plan</h4>${areas.length ? `<table class="table table-compact"><thead><tr><th>Development opportunity</th><th>Improvement plan</th></tr></thead><tbody>${areas.map(a=>`<tr><td>${esc(a.area)}</td><td>${esc(a.planMejora)}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">Not applicable.</p>'}</article>
           <article class="span-2"><h4>Development plan</h4>${planes.length ? renderPlanesTabla(planes) : '<p class="muted">Not applicable.</p>'}</article>
-          ${cal && cal.observacionesRH ? `<article class="span-2"><h4>DO observations</h4><p>${esc(cal.observacionesRH)}</p></article>` : ''}
         </div>
-      </section>
-      <section class="feedback-acceptance-card ${cal&&cal.acuerdosLiberados?'ready':'locked'}"><div class="feedback-signing-head"><div><span class="admin-section-kicker">CLOSURE AND RECORD</span><h3>Feedback confirmation and signature</h3><p>${cal&&cal.acuerdosLiberados?'The final agreements have been released. Sign once you have reviewed the result, the feedback, and the development plan.':'Signing will be enabled after the meeting and once the manager releases the final agreements.'}</p></div><div class="document-actions"><button class="btn btn-outline btn-sm" onclick="App.descargarRetroalimentacion('${col.empleado}','${periodoId}')">Download record</button><button class="btn btn-outline btn-sm" onclick="App.imprimirRetroalimentacion('${col.empleado}','${periodoId}')">Print / Save PDF</button></div></div>
-        <div class="signature-own-flow">
-          ${renderOtherPartySignatureStatus('lider',cal)}
-          ${renderSignatureCard('colaborador',col,periodoId,cal,!cal?.acuerdosLiberados?'Your manager has not released the final agreements yet.':!cal?.firmaLider?'Your signature will be enabled after your manager signs from their portal.':null)}
-        </div>
-        <div class="feedback-legal-note">Each participant signs from their own portal. By signing, you confirm that you received and reviewed the feedback and are aware of the recorded agreements.</div>
       </section>
     </div>`;
   }
