@@ -868,7 +868,9 @@
     const d = state.remote.detail; const me = empleadoRemoto();
     const leader = d.leader || {};
     const liderId = leader.employeeId || leader.empleado || state.remote.mine.evaluation.leaderId || '';
-    upsertColaboradorRemoto(me, liderId);
+    const colRec = upsertColaboradorRemoto(me, liderId);
+    // Nombre del líder evaluador entregado por el backend (solo nombre/puesto; sin datos de RH/DO).
+    if (colRec && leader.name) { colRec.liderNombre = String(leader.name); S.persist(); }
     const backendId = state.remote.mine.evaluation.evaluationId || state.remote.mine.evaluation.id;
     const local = getOrCreateLocalEvaluation(me.empleado, liderId, 'autoevaluacion', backendId, state.remote.mine.evaluation.state || state.remote.mine.evaluation.selfState);
     (d.answers || []).filter(a => !/l[ií]der|leader/i.test(String(a.evaluator || a.evaluador || ''))).forEach(a => mapRemoteAnswerToLocal(local.id, a));
@@ -986,7 +988,10 @@
       empleado: e.employeeId || state.user.empleado,
       nombre: e.name || state.user.nombre,
       correoCorporativo: e.email || '', puesto: e.position || state.user.puesto || '',
-      area: e.area || state.user.area || '', direccion: e.direction || state.user.direccion || '', ciudad: ''
+      area: e.area || state.user.area || '', direccion: e.direction || state.user.direccion || '', ciudad: '',
+      // Solo nombre del líder evaluador entregado por el backend; sin datos de RH/DO.
+      liderId: String(((state.remote.detail || {}).leader || {}).employeeId || ''),
+      liderNombre: String(((state.remote.detail || {}).leader || {}).name || '')
     };
   }
   async function refreshBackendRead(force) {
@@ -1661,7 +1666,7 @@
       <div class="info-grid">
         <div><span class="label">Active period</span><span class="value">${esc(state.periodo.nombre)}</span></div>
         <div><span class="label">Status</span>${badge(estado)}</div>
-        <div><span class="label">Direct manager</span><span class="value">${esc(liderDirecto ? liderDirecto.nombre : '—')}</span></div>
+        <div><span class="label">Direct manager</span><span class="value">${esc(liderDirecto ? liderDirecto.nombre : (col.liderNombre || '—'))}</span></div>
         <div><span class="label">Self-assessment deadline</span><span class="value">${state.periodo.fechaLimiteAutoevaluacion}${vencida ? ' ' + badge('Vencida', 'red') : ''}</span></div>
       </div>
       <div class="progress-wrap">${progressBar(avance)}</div>
@@ -2397,7 +2402,10 @@
     const performanceProfile = buildPerformanceProfile(col.empleado, periodoId);
     const performanceWheelHtml = performanceProfile ? global.EDDCharts.renderPerformanceWheel(performanceProfile) : '';
 
-    const objetivosNA = !!(liderEval?.objetivosNoAplicanConfirmados || liderEval?.objetivosNoAplican || liderEval?.objetivosNoAplicanDecision === 'confirmado');
+    // Objetivos N/A: confirmación explícita del líder, o resultado oficial sin promedio de objetivos
+    // (ausencia de calificación no equivale a 0).
+    const objetivosNA = !!(liderEval?.objetivosNoAplicanConfirmados || liderEval?.objetivosNoAplican || liderEval?.objetivosNoAplicanDecision === 'confirmado'
+      || (resLider && (promedios.objetivos === null || promedios.objetivos === undefined)));
     const seccionesCards = ['actitud', 'habilidades', 'objetivos'].map((s) => {
       const meta = D.SECCIONES_META[s];
       if (s === 'objetivos' && objetivosNA) {
@@ -2430,7 +2438,7 @@
             <div><span class="label">Division</span><span class="value">${esc(col.direccion)}</span></div>
             <div><span class="label">Work location</span><span class="value">${esc(col.ciudad)}</span></div>
             <div><span class="label">Tenure</span><span class="value">${esc(col.antiguedad)}</span></div>
-            <div><span class="label">Direct manager</span><span class="value">${esc(liderDirecto ? liderDirecto.nombre : '—')}</span></div>
+            <div><span class="label">Direct manager</span><span class="value">${esc(liderDirecto ? liderDirecto.nombre : (col.liderNombre || '—'))}</span></div>
             <div><span class="label">Evaluation period</span><span class="value">${esc(state.periodo.nombre)}</span></div>
           </div>
         </div>
