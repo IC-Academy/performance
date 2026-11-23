@@ -2336,8 +2336,9 @@
     if(!resAuto||!resLider) return '';
     const sections=[['actitud','Values and attitude'],['habilidades','Technical-functional'],['objetivos','Objectives']];
     return `<div class="performance-summary-strip">${sections.map(([k,label])=>{
-      const a=Number((resAuto?.promedios || {})[k]), l=Number((resLider?.promedios || {})[k]);
-      const lOk=Number.isFinite(l), aOk=Number.isFinite(a);
+      const scoreOrNull = value => (value === null || value === undefined || value === '' || value === 'N/A') ? null : (Number.isFinite(Number(value)) ? Number(value) : null);
+      const a=scoreOrNull((resAuto?.promedios || {})[k]), l=scoreOrNull((resLider?.promedios || {})[k]);
+      const lOk=l !== null, aOk=a !== null;
       const idealGap=lOk?5-l:null, perception=(aOk&&lOk)?a-l:null;
       const cls=idealGap===null?'neutral':idealGap<=.5?'good':idealGap<=1.25?'mid':'attention';
       return `<article class="performance-summary-card ${cls}"><span>${esc(label)}</span><strong>${lOk?l.toFixed(1):'—'}<small>/5 manager</small></strong><div><b>${idealGap===null?'—':`${idealGap.toFixed(1)} pts below ideal`}</b><em>${perception===null?'—':`${perception>0?'+':''}${perception.toFixed(1)} self vs manager`}</em></div></article>`;
