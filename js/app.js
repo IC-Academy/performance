@@ -2323,8 +2323,14 @@
       const short=chartLabels[c.id] || c.nombre.replace(/\s*\([^)]*\)/g,'');
       dims.push({key,label:c.nombre,shortLabel:short});
       const ar=autoResp.find(r=>r.competenciaId===c.id), lr=leaderResp.find(r=>r.competenciaId===c.id);
-      auto[key]=ar && ar.valor!=='N/A' ? Number(ar.valor) : null;
-      lider[key]=lr && lr.valor!=='N/A' ? Number(lr.valor) : null;
+      const validRating = v => (v===null||v===undefined||v===''||v==='N/A') ? null : (Number.isFinite(Number(v))&&Number(v)>=1&&Number(v)<=5 ? Number(v) : null);
+      auto[key]=ar ? validRating(ar.valor) : null;
+      lider[key]=lr ? validRating(lr.valor) : null;
+      if (c.id==='B2') {
+        const toolAvg = ev => { const vals=Object.values(S.getHerramientasEvaluacion(ev.id)||{}).map(validRating).filter(v=>v!==null); return vals.length?vals.reduce((sum,v)=>sum+v,0)/vals.length:null; };
+        auto[key]=toolAvg(autoEval);
+        lider[key]=toolAvg(leaderEval);
+      }
     });
     const ao=S.getObjetivos(autoEval.id).filter(o=>(o.descripcion||'').trim()), lo=S.getObjetivos(leaderEval.id).filter(o=>(o.descripcion||'').trim());
     const avgA=C.promedioValido(ao.map(o=>o.calificacion)), avgL=C.promedioValido(lo.map(o=>o.calificacion));
