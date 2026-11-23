@@ -27,7 +27,7 @@
   function esc(str) {
     return String(str === null || str === undefined ? '' : str).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
-  function fmt(n) { return (n === null || n === undefined || isNaN(n)) ? '—' : Number(n).toFixed(1); }
+  function fmt(n) { return (n === null || n === undefined || n === '' || n === 'N/A' || !Number.isFinite(Number(n))) ? '—' : Number(n).toFixed(1); }
   function iniciales(nombre) {
     return String(nombre || '?').split(' ').filter(Boolean).slice(0, 2).map((p) => p[0]).join('').toUpperCase();
   }
@@ -406,20 +406,23 @@
     });
 
     function series(values,color,opacity,dash){
-      const pts=dimensiones.map((d,i)=>xy(values[d.key],i));
-      const pstr=pts.map(p=>`${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+      const valid = v => v !== null && v !== undefined && v !== '' && v !== 'N/A' && Number.isFinite(Number(v)) && Number(v)>=1 && Number(v)<=5;
+      const pts=dimensiones.map((d,i)=>valid(values[d.key])?xy(values[d.key],i):null);
+      const pstr=pts.filter(Boolean).map(p=>`${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
       const dots=pts.map((p,i)=>{
         const d=dimensiones[i], v=values[d.key];
+        if(!p) return '';
         return `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4.2" fill="${color}" stroke="#fff" stroke-width="1.4"><title>${esc(d.label)}: ${fmt(v)}</title></circle>`;
       }).join('');
-      return `<polygon points="${pstr}" fill="${color}" fill-opacity="${opacity}" stroke="${color}" stroke-width="2.4" ${dash?`stroke-dasharray="${dash}"`:''}/>${dots}`;
+      return `${pts.every(Boolean)?`<polygon points="${pstr}" fill="${color}" fill-opacity="${opacity}" stroke="${color}" stroke-width="2.4" ${dash?`stroke-dasharray="${dash}"`:''}/>`:''}${dots}`;
     }
     const idealValues={}; dimensiones.forEach(d=>idealValues[d.key]=ideal);
     const svg=`<svg viewBox="0 0 ${size} ${size}" class="performance-wheel-svg" role="img" aria-label="Multidimensional performance profile">${grid}${series(idealValues,'#a8b5c4',0,'6,5')}${series(auto,'#2f7dd3',.11,'')}${series(lider,'#e27a24',.10,'')}</svg>`;
 
     const details=dimensiones.map(d=>{
-      const a=Number(auto[d.key]), l=Number(lider[d.key]);
-      const aOk=Number.isFinite(a), lOk=Number.isFinite(l);
+      const validScore = v => v !== null && v !== undefined && v !== '' && v !== 'N/A' && Number.isFinite(Number(v)) && Number(v)>=1 && Number(v)<=5;
+      const aOk=validScore(auto[d.key]), lOk=validScore(lider[d.key]);
+      const a=aOk?Number(auto[d.key]):null, l=lOk?Number(lider[d.key]):null;
       const gapIdeal=lOk ? (ideal-l) : null;
       const gapPerception=(aOk&&lOk) ? (a-l) : null;
       const cls=gapIdeal===null?'neutral':gapIdeal<=.5?'good':gapIdeal<=1.25?'mid':'attention';
