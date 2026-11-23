@@ -11,10 +11,12 @@
   function lower(value) { return String(value == null ? '' : value).trim().toLowerCase(); }
 
   function needsLeaderEvaluation(item) {
+    if (item && item.readOnly === true) return false; // shared read-only access: never actionable
     return teamState.needsLeaderEvaluation(item);
   }
 
   function needsLeaderSignature(item) {
+    if (item && item.readOnly === true) return false;
     if (item.leaderSignaturePending === true) return true;
     const feedback = lower(item.feedbackState || item.feedbackStatus || item.processState);
     const leaderSigned = item.leaderSigned === true || item.leaderSignature === true || /firma.*l[ií]der.*completa|firmado.*l[ií]der|manager signature complete|signed by manager/.test(feedback);

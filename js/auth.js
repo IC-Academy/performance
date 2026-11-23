@@ -243,9 +243,10 @@
       }
     }
     const rolNormalizado = String(session.user.rol || '').toLowerCase();
-    const perfil = caps.isAdmin ? 'administrador' : (caps.canEvaluate ? 'lider' : (ROL_API_A_INTERNO[rolNormalizado] || rolNormalizado || 'colaborador'));
+    const perfil = caps.isAdmin ? 'administrador' : ((caps.canEvaluate || caps.canViewSharedTeam === true) ? 'lider' : (ROL_API_A_INTERNO[rolNormalizado] || rolNormalizado || 'colaborador'));
     if (perfil === 'administrador') caps.isAdmin = true;
-    if (perfil === 'lider') caps.canEvaluate = true;
+    // Shared read-only team access (backend-validated) must never grant evaluation rights in the UI.
+    if (perfil === 'lider' && caps.sharedTeamReadOnly !== true) caps.canEvaluate = true;
     if (perfil === 'colaborador') caps.canSelfEvaluate = true;
     return {
       empleado: session.user.numeroEmpleado,
