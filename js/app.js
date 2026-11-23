@@ -3337,7 +3337,7 @@
         }).join('') : '';
 
         const secAvg=(prefix,leader)=>{const xs=answers.filter(a=>cidOf(a).startsWith(prefix)&&(leader?/l[ií]der|leader/.test(roleOf(a)):!/l[ií]der|leader/.test(roleOf(a)))).map(valOf).filter(v=>typeof v==='number');return xs.length?xs.reduce((a,b)=>a+b,0)/xs.length:null};
-        const objScore=(leader)=>{const xs=objectives.map(o=>leader?(o.leaderScore??o.calificacionLider):(o.selfScore??o.calificacionColaborador??o.automaticScore??o.calificacionAutomatica)).filter(v=>typeof v==='number');return xs.length?xs.reduce((a,b)=>a+b,0)/xs.length:null};
+        const objScore=(leader)=>{const xs=objectives.map(o=>leader?(o.leaderScore??o.calificacionLider):(o.selfScore??o.calificacionColaborador??o.automaticScore??o.calificacionAutomatica)).map(v=>(v===null||v===undefined||v===''||v==='N/A')?null:Number(v)).filter(v=>v!==null&&Number.isFinite(v));return xs.length?xs.reduce((a,b)=>a+b,0)/xs.length:null};
         const autoProm={actitud:secAvg('A',false),habilidades:secAvg('B',false),objetivos:objScore(false)};
         const leaderProm={actitud:secAvg('A',true),habilidades:secAvg('B',true),objetivos:objScore(true)};
         const radar = detailReady ? global.EDDCharts.renderRadarChart({autoevaluacion:autoProm,evaluacionLider:leaderProm,calibracion:item.calibratedResult!=null?{resultadoLider:item.leaderResult,resultadoCalibrado:item.calibratedResult}:null,size:380}) : '';
@@ -3345,6 +3345,10 @@
         const performanceDims=[...(D.COMPETENCIAS.actitud||[]),...(D.COMPETENCIAS.habilidades||[])].map(c=>({key:c.id.toLowerCase(),label:c.nombre,shortLabel:chartLabels[c.id]||c.nombre}));
         const performanceAuto={}, performanceLeader={};
         performanceDims.forEach(d=>{ const cid=d.key.toUpperCase(); performanceAuto[d.key]=valOf(findAns(cid,false)); performanceLeader[d.key]=valOf(findAns(cid,true)); });
+        // B2 is the average of applicable tool ratings, not a standalone competency answer.
+        const toolAverage = leader => { const xs=toolDefs.map(([id])=>valOf(findAns(id,leader))).filter(v=>typeof v==='number'&&v>=1&&v<=5); return xs.length?xs.reduce((a,b)=>a+b,0)/xs.length:null; };
+        performanceAuto.b2=toolAverage(false);
+        performanceLeader.b2=toolAverage(true);
         performanceDims.push({key:'objetivos',label:'Goal Achievement',shortLabel:'Objectives'}); performanceAuto.objetivos=autoProm.objetivos; performanceLeader.objetivos=leaderProm.objetivos;
         const performanceProfile={dimensiones:performanceDims,autoevaluacion:performanceAuto,evaluacionLider:performanceLeader};
         const performanceWheel = detailReady ? global.EDDCharts.renderPerformanceWheel(performanceProfile) : '';
