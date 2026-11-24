@@ -133,7 +133,8 @@
     const processRaw = lower(x.processState || '');
     let process = x.processState || '—';
     if (/leader_submitted|pending_calibration/.test(processRaw)) process = 'Pending calibration';
-    const feedback = x.feedbackState || '—';
+    const FB_LABELS = { not_available: '—', pending_creation: 'Preparing', pending_meeting: 'Meeting pending', meeting_confirmed: 'Meeting held', agreements_recorded: 'Agreements recorded', ready_for_leader_signature: 'Ready for signature', pending_employee_signature: 'Employee signature pending', closed: 'Closed', integrity_error: 'Needs review' };
+    const feedback = FB_LABELS[x.feedbackState] || x.feedbackState || '—';
     const signature = needsLeaderSignature(x) ? '<span class="badge badge-red">Pending manager</span>' : (x.employeeSignaturePending ? '<span class="badge badge-yellow">Employee pending</span>' : '—');
     let action = '';
     if (mode === 'pending') action = `<button class="btn btn-primary btn-sm workflow-action-primary" onclick="App.abrirEvaluacionLider('${esc(id)}','${esc(evId)}')">Evaluate now →</button>`;

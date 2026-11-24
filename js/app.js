@@ -786,8 +786,51 @@
     return { selfMetrics, leaderMetrics };
   }
 
+  // --- Feedback process contract (backend is the source of truth; permissions are computed server-side) ---
+  const FEEDBACK_STATE_LABELS = {
+    not_available: '—', pending_creation: 'Preparing', pending_meeting: 'Meeting pending', meeting_confirmed: 'Meeting held',
+    agreements_recorded: 'Agreements recorded', ready_for_leader_signature: 'Ready for signature',
+    pending_employee_signature: 'Employee signature pending', closed: 'Closed', integrity_error: 'Needs review'
+  };
+  function feedbackStateLabel(s) { return FEEDBACK_STATE_LABELS[s] || (s ? String(s) : '—'); }
+  function feedbackPerms(colaboradorId, periodoId) {
+    try { const cal = S.getCalibracion(String(colaboradorId), periodoId); return (cal && cal.backendPerms) || null; } catch (_) { return null; }
+  }
+  function hydrateFeedbackProcess(detail, colaboradorId, periodoId) {
+    const p = detail && detail.feedbackProcess;
+    if (!p || typeof p !== 'object' || !colaboradorId || !periodoId) return null;
+    const perms = {
+      canConfirmMeeting: p.canConfirmMeeting === true, canEditAgreements: p.canEditAgreements === true,
+      canReleaseAgreements: p.canReleaseAgreements === true, canSignAsLeader: p.canSignAsLeader === true,
+      canSignAsEmployee: p.canSignAsEmployee === true, canPrintAgreements: p.canPrintAgreements === true
+    };
+    const cambios = { _motivo: 'Backend feedback process', backendPerms: perms, feedbackState: p.feedbackState || null };
+    if (p.feedbackId) cambios.feedbackId = p.feedbackId;
+    cambios.retroHabilitada = p.feedbackEnabled === true;
+    cambios.reunionLiderRealizada = p.meetingConfirmed === true;
+    cambios.acuerdosLiberados = p.agreementsReleased === true;
+    cambios.firmaLider = p.leaderSigned === true;
+    cambios.firmaColaborador = p.employeeSigned === true;
+    cambios.aceptacionColaborador = p.employeeSigned === true;
+    return S.crearOActualizarCalibracion(String(colaboradorId), periodoId, cambios, 'Backend');
+  }
+  function leaderTeamActionHtml(x, evaluationId, base) {
+    const id = esc(x.employeeId), ev = esc(evaluationId);
+    const open = (label, cls, after) => `<button class="${cls}" onclick="App.abrirComparacionLider('${id}','${ev}'${after ? ",'" + after + "'" : ''})">${label}</button>`;
+    const out = [];
+    if (x.canSignAsLeader) out.push(open('Sign Agreements', 'btn btn-primary btn-sm'));
+    else if (x.canReleaseAgreements || (x.feedbackState === 'agreements_recorded' && x.canEditAgreements)) out.push(open('Release Agreements', 'btn btn-primary btn-sm'));
+    else if (x.canEditAgreements) out.push(open('Record Agreements', 'btn btn-primary btn-sm'));
+    else if (x.canConfirmMeeting) out.push(open('Start Feedback', 'btn btn-primary btn-sm'));
+    else if (x.employeeSignaturePending) { out.push('<span class="badge badge-yellow">Pending Employee Signature</span>'); out.push(open('View Agreements', 'btn btn-outline btn-sm')); }
+    else if (x.feedbackState === 'closed' || x.agreementsReleased) out.push(open('View Agreements', 'btn btn-outline btn-sm'));
+    if (x.canPrintAgreements) out.push(open('Print Agreements', 'btn btn-outline btn-sm', 'print'));
+    return out.length ? '<div style="display:flex;gap:6px;flex-wrap:wrap">' + out.join('') + '</div>' : (base || '');
+  }
+
   function hydrateRemoteFeedback(detail, colaboradorId, periodoId, leaderEv) {
     if (!detail || !colaboradorId || !periodoId) return null;
+    try { hydrateFeedbackProcess(detail, colaboradorId, periodoId); } catch (e) { console.warn('EDD: feedback process hydration', e); }
     const fb = detail.feedback;
     const calRemote = detail.calibration || detail.calibracion || null;
     if (!fb && !calRemote) return null;
@@ -2579,7 +2622,7 @@
     const pendingEval = team.filter(x => teamState.needsLeaderEvaluation(x) && x.readOnly !== true).length;
     const pendingLeaderSignature = team.filter(x => x.leaderSignaturePending).length;
     const pendingEmployeeSignature = team.filter(x => x.employeeSignaturePending).length;
-    return `<section class="backend-live-section">${readOnlyBanner}<div class="kpi-grid">${kpi('Employees',team.length)}${kpi('Pending evaluations',pendingEval,pendingEval?'yellow':'gray')}${kpi('Pending manager signature',pendingLeaderSignature,pendingLeaderSignature?'red':'gray')}${kpi('Pending employee signature',pendingEmployeeSignature,pendingEmployeeSignature?'yellow':'gray')}</div><div class="card"><div class="admin-panel-head"><div><span class="admin-section-kicker">TRACKING</span><h2>${soloFirmas?'Pending signatures':soloPendientes?'Pending evaluations':'My team'}</h2><p>Review your team's progress and the actions that require follow-up.</p></div><div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center"><button class="btn btn-outline btn-sm" onclick="App.recargarBackend()">Refresh</button></div></div><div class="admin-table-wrap"><table class="table"><thead><tr><th>Name</th><th>Position</th><th>Area</th><th>Self-assessment</th><th>Manager evaluation</th><th>Process</th><th>Feedback</th><th>Signature</th><th></th></tr></thead><tbody>${team.map(x=>{const evaluationId=teamState.evaluationId(x);const roRow=x.readOnly===true||sharedAccess;const canEvaluate=!roRow&&teamState.needsLeaderEvaluation(x);const leaderDone=teamState.leaderDone(x);return `<tr><td><div class="backend-person-cell"><strong>${esc(x.name||x.employeeName||x.employeeId)}</strong><small>${esc(x.employeeId||'')}</small></div></td><td>${esc(x.position||'—')}</td><td>${esc(x.area||'—')}</td><td>${badge(teamState.valueOf(teamState.selfStatus(x))||'—')}</td><td>${badge(teamState.valueOf(teamState.leaderStatus(x))||'—')}</td><td>${badge(teamState.valueOf(x.processState)||'—')}</td><td>${badge(teamState.valueOf(x.feedbackState)||'—')}</td><td>${x.leaderSignaturePending?badge('Manager pending','red'):x.employeeSignaturePending?badge('Employee pending','yellow'):'—'}</td><td>${roRow?'<span class="badge badge-gray">Read-only</span>':canEvaluate?`<button class="btn btn-primary btn-sm" onclick="App.abrirEvaluacionLider('${esc(x.employeeId)}','${esc(evaluationId)}')">Evaluate</button>`:leaderDone&&evaluationId?`<button class="btn btn-outline btn-sm" onclick="App.abrirComparacionLider('${esc(x.employeeId)}','${esc(evaluationId)}')">View progress</button>`:'<span class="muted">Awaiting self-assessment</span>'}</td></tr>`}).join('')||`<tr><td colspan="9" class="muted">No agreements ready for signature. Newly released feedback first appears in My team as Meeting pending; after the meeting is confirmed and the agreements are released, it moves to this view.</td></tr>`}</tbody></table></div><p class="backend-read-note">Information is updated as each stage of the process progresses.</p></div>${!soloFirmas&&!soloPendientes?'<section class="card" style="margin-top:20px;padding:0;overflow:hidden"><iframe title="My Team · Team Insights and 9-Box" src="team-calibration-live.html?v=20261102-embedded-v1" loading="lazy" style="display:block;width:100%;height:1080px;border:0;background:#f4f7fa" referrerpolicy="same-origin"></iframe></section>':''}</section>`;
+    return `<section class="backend-live-section">${readOnlyBanner}<div class="kpi-grid">${kpi('Employees',team.length)}${kpi('Pending evaluations',pendingEval,pendingEval?'yellow':'gray')}${kpi('Pending manager signature',pendingLeaderSignature,pendingLeaderSignature?'red':'gray')}${kpi('Pending employee signature',pendingEmployeeSignature,pendingEmployeeSignature?'yellow':'gray')}</div><div class="card"><div class="admin-panel-head"><div><span class="admin-section-kicker">TRACKING</span><h2>${soloFirmas?'Pending signatures':soloPendientes?'Pending evaluations':'My team'}</h2><p>Review your team's progress and the actions that require follow-up.</p></div><div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center"><button class="btn btn-outline btn-sm" onclick="App.recargarBackend()">Refresh</button></div></div><div class="admin-table-wrap"><table class="table"><thead><tr><th>Name</th><th>Position</th><th>Area</th><th>Self-assessment</th><th>Manager evaluation</th><th>Process</th><th>Feedback</th><th>Signature</th><th></th></tr></thead><tbody>${team.map(x=>{const evaluationId=teamState.evaluationId(x);const roRow=x.readOnly===true||sharedAccess;const canEvaluate=!roRow&&teamState.needsLeaderEvaluation(x);const leaderDone=teamState.leaderDone(x);return `<tr><td><div class="backend-person-cell"><strong>${esc(x.name||x.employeeName||x.employeeId)}</strong><small>${esc(x.employeeId||'')}</small></div></td><td>${esc(x.position||'—')}</td><td>${esc(x.area||'—')}</td><td>${badge(teamState.valueOf(teamState.selfStatus(x))||'—')}</td><td>${badge(teamState.valueOf(teamState.leaderStatus(x))||'—')}</td><td>${badge(teamState.valueOf(x.processState)||'—')}</td><td>${badge(feedbackStateLabel(x.feedbackState))}</td><td>${x.leaderSignaturePending?badge('Manager pending','red'):x.employeeSignaturePending?badge('Employee pending','yellow'):'—'}</td><td>${roRow?'<span class="badge badge-gray">Read-only</span>':canEvaluate?`<button class="btn btn-primary btn-sm" onclick="App.abrirEvaluacionLider('${esc(x.employeeId)}','${esc(evaluationId)}')">Evaluate</button>`:leaderTeamActionHtml(x,evaluationId,leaderDone&&evaluationId?`<button class="btn btn-outline btn-sm" onclick="App.abrirComparacionLider('${esc(x.employeeId)}','${esc(evaluationId)}')">View progress</button>`:'<span class="muted">Awaiting self-assessment</span>')}</td></tr>`}).join('')||`<tr><td colspan="9" class="muted">No agreements ready for signature. Newly released feedback first appears in My team as Meeting pending; after the meeting is confirmed and the agreements are released, it moves to this view.</td></tr>`}</tbody></table></div><p class="backend-read-note">Information is updated as each stage of the process progresses.</p></div>${!soloFirmas&&!soloPendientes?'<section class="card" style="margin-top:20px;padding:0;overflow:hidden"><iframe title="My Team · Team Insights and 9-Box" src="team-calibration-live.html?v=20261102-embedded-v1" loading="lazy" style="display:block;width:100%;height:1080px;border:0;background:#f4f7fa" referrerpolicy="same-origin"></iframe></section>':''}</section>`;
   }
 
   function viewLiderDashboard(lider, periodoId, soloPendientes, soloFirmas) {
@@ -2893,7 +2936,7 @@
       <h3>9-Box Matrix placement</h3>
       ${ninaBoxHtml}
       <p class="muted">Current process status: ${badge(estado)}. Calibration and feedback release are managed by the DO administrator.</p>
-      ${cal && cal.retroHabilitada ? `<section class="leader-release-card"><div class="feedback-signing-head"><div><span class="admin-section-kicker">FEEDBACK CLOSURE</span><h3>Meeting, agreements, and signature</h3><p>Confirm the meeting, adjust the agreements if needed, and release the final version before signing.</p></div><div class="document-actions"><button class="btn btn-outline btn-sm" onclick="App.descargarRetroalimentacion('${colaboradorId}','${periodoId}')">Download record</button><button class="btn btn-outline btn-sm" onclick="App.imprimirRetroalimentacion('${colaboradorId}','${periodoId}')">Print / Save PDF</button></div></div><div class="actions"><a class="btn btn-outline" href="${esc(outlookMeetingUrl(col,state.periodo&&state.periodo.nombre))}" target="_blank" rel="noopener noreferrer">Schedule meeting in Outlook</a></div><p class="muted">A new Outlook event opens in another tab with the subject and context prefilled. Select the date and time, confirm the invitee, and send the invitation. EDD does not save the event; afterward, confirm here that the meeting took place and document the agreements.</p><label class="confirm-check"><input type="checkbox" ${cal.reunionLiderRealizada?'checked':''} ${cal.firmaLider?'disabled':''} onchange="App.confirmarReunionLider('${colaboradorId}','${periodoId}',this.checked)"/> I confirm that I have held the feedback meeting with the employee.</label><label class="calibration-field" style="margin-top:14px"><span>Final meeting agreements</span><textarea id="feedbackAgreements-${colaboradorId}" ${cal.acuerdosLiberados?'disabled':''} placeholder="Document commitments, owners, and final agreements...">${esc(cal.acuerdosFinales||'')}</textarea></label><div class="actions"><button class="btn btn-primary" ${cal.reunionLiderRealizada&&!cal.acuerdosLiberados&&!cal.firmaLider?'':'disabled'} onclick="App.liberarAcuerdos('${colaboradorId}','${periodoId}')">${cal.acuerdosLiberados?'✓ Agreements released':'Save and release agreements for signature'}</button></div><div class="signature-own-flow leader-signature-grid">${renderSignatureCard('lider',col,periodoId,cal,!cal.acuerdosLiberados?'Release the final agreements first.':null)}${renderOtherPartySignatureStatus('colaborador',cal)}</div></section>` : ''}
+      ${cal && cal.retroHabilitada ? `<section class="leader-release-card"><div class="feedback-signing-head"><div><span class="admin-section-kicker">FEEDBACK CLOSURE</span><h3>Meeting, agreements, and signature</h3><p>Confirm the meeting, adjust the agreements if needed, and release the final version before signing.</p></div><div class="document-actions"><button class="btn btn-outline btn-sm" onclick="App.descargarRetroalimentacion('${colaboradorId}','${periodoId}')">Download record</button><button class="btn btn-outline btn-sm" onclick="App.imprimirRetroalimentacion('${colaboradorId}','${periodoId}')">Print / Save PDF</button></div></div><div class="actions"><a class="btn btn-outline" href="${esc(outlookMeetingUrl(col,state.periodo&&state.periodo.nombre))}" target="_blank" rel="noopener noreferrer">Schedule meeting in Outlook</a></div><p class="muted">A new Outlook event opens in another tab with the subject and context prefilled. Select the date and time, confirm the invitee, and send the invitation. EDD does not save the event; afterward, confirm here that the meeting took place and document the agreements.</p><label class="confirm-check"><input type="checkbox" ${cal.reunionLiderRealizada?'checked':''} ${(cal.firmaLider||cal.acuerdosLiberados||(cal.backendPerms&&!cal.backendPerms.canConfirmMeeting&&!cal.reunionLiderRealizada))?'disabled':''} onchange="App.confirmarReunionLider('${colaboradorId}','${periodoId}',this.checked)"/> I confirm that I have held the feedback meeting with the employee.</label><label class="calibration-field" style="margin-top:14px"><span>Final meeting agreements</span><textarea id="feedbackAgreements-${colaboradorId}" ${(cal.acuerdosLiberados||(cal.backendPerms&&!cal.backendPerms.canEditAgreements))?'disabled':''} placeholder="Document commitments, owners, and final agreements...">${esc(cal.acuerdosFinales||'')}</textarea></label><div class="actions"><button class="btn btn-primary" ${cal.reunionLiderRealizada&&!cal.acuerdosLiberados&&!cal.firmaLider&&(!cal.backendPerms||cal.backendPerms.canEditAgreements)?'':'disabled'} onclick="App.liberarAcuerdos('${colaboradorId}','${periodoId}')">${cal.acuerdosLiberados?'✓ Agreements released':'Save and release agreements for signature'}</button></div><div class="signature-own-flow leader-signature-grid">${renderSignatureCard('lider',col,periodoId,cal,!cal.acuerdosLiberados?'Release the final agreements first.':((cal.backendPerms&&!cal.backendPerms.canSignAsLeader&&!cal.firmaLider)?'You cannot sign this record at this stage.':null))}${renderOtherPartySignatureStatus('colaborador',cal)}</div></section>` : ''}
     </div>`;
   }
 
@@ -3725,7 +3768,7 @@
         navigate('#/lider/evaluar/' + employeeId);
       } catch (err) { showNotice(err.message || 'Unable to load the evaluation.','warning'); } finally { state.remote.loadingEvaluationId = null; }
     },
-    async abrirComparacionLider(employeeId, evaluationId) {
+    async abrirComparacionLider(employeeId, evaluationId, after) {
       if (state.user && state.user.capabilities && state.user.capabilities.sharedTeamReadOnly === true) { global.alert('This shared team access is read-only.'); return; }
       if (!apiReadMode()) { navigate('#/lider/comparacion/' + employeeId); return; }
       if (state.remote.loadingEvaluationId) return;
@@ -3752,6 +3795,7 @@
         if (location.hash !== target) history.pushState(null, '', target);
         state.remote.loadingEvaluationId = null;
         render();
+        if (after === 'print') { const perms = feedbackPerms(employeeId, state.periodo.id); if (perms && perms.canPrintAgreements) setTimeout(() => Actions.imprimirRetroalimentacion(String(employeeId), state.periodo.id), 80); else showNotice('The agreements are not available to print yet.','warning'); }
       } catch(e) { showNotice(e&&e.message?e.message:'Unable to load the progress details.','warning'); }
       finally { state.remote.loadingEvaluationId=null; }
     },
@@ -4411,6 +4455,7 @@
       if(role==='lider'){ const col=S.getColaborador(colaboradorId); if(!col||String(col.liderId)!==String(state.user.empleado)){showNotice('You are not authorized to sign this employee\'s feedback.','warning');return;} }
       if(!cal||!cal.retroHabilitada){showNotice('Feedback is not enabled yet.','warning');return;}
       if(!cal.acuerdosLiberados){showNotice('The final agreements must be released before signing.','warning');return;}
+      if(cal.backendPerms){ const okPerm=role==='lider'?cal.backendPerms.canSignAsLeader:cal.backendPerms.canSignAsEmployee; if(!okPerm){showNotice('You are not authorized to sign this record at this stage.','warning');return;} }
       if(role==='colaborador'&&!cal.firmaLider){showNotice('The employee signature is enabled after the manager signs.','warning');return;}
       if(!c){showNotice('The signature box was not found.','warning');return;}
       const blank=document.createElement('canvas');blank.width=c.width;blank.height=c.height;
@@ -4443,17 +4488,20 @@
     async confirmarReunionLider(colaboradorId,periodoId,checked){
       const cal=S.getCalibracion(colaboradorId,periodoId);
       if(apiWriteMode() && !checked){ showNotice('In production, a confirmed meeting cannot be reverted from the portal.','info'); render(); return; }
+      if(cal&&cal.backendPerms&&checked&&!cal.backendPerms.canConfirmMeeting){ showNotice('The meeting cannot be confirmed at this stage.','warning'); render(); return; }
       try{
         if(apiWriteMode()){
           if(!cal||!cal.feedbackId) throw new Error('The feedback identifier was not found. Refresh the page.');
           await global.EDDApi.confirmFeedbackMeeting(cal.feedbackId);
         }
         S.crearOActualizarCalibracion(colaboradorId,periodoId,{reunionLiderRealizada:!!checked,fechaReunion:checked?new Date().toISOString():null,_motivo:'Feedback meeting confirmation'},state.user.nombre);
+        try{ const aEv=S.getEvaluacion(colaboradorId,periodoId,'autoevaluacion'); const bId=aEv&&(aEv.backendId||aEv.id); if(apiWriteMode()&&bId) await refreshFeedbackDetail(bId,colaboradorId,S.getEvaluacion(colaboradorId,periodoId,'lider')); }catch(_){}
         showNotice(checked?'Meeting confirmed. Document the final agreements.':'Meeting confirmation removed.','success'); render();
       }catch(e){showNotice(e&&e.message?e.message:'Unable to confirm the meeting.','warning');render();}
     },
     async liberarAcuerdos(colaboradorId,periodoId){
       let cal=S.getCalibracion(colaboradorId,periodoId); if(!cal||!cal.reunionLiderRealizada){showNotice('First confirm that you held the feedback meeting.','warning');return;}
+      if(cal.backendPerms&&!cal.backendPerms.canEditAgreements){showNotice('The agreements cannot be modified at this stage.','warning');return;}
       const txt=String((document.getElementById('feedbackAgreements-'+colaboradorId)||{}).value||cal.acuerdosFinales||'').trim();
       if(!txt){showNotice('Document the final agreements before releasing them for signature.','warning');return;}
       const autoEv=S.getEvaluacion(colaboradorId,periodoId,'autoevaluacion');
