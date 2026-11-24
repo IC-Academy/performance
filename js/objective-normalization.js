@@ -41,7 +41,11 @@
 
       const automaticPercent = num(opts.cumplimientoAutomatico);
 
-      if (!opts.ajusteManualLider) {
+      const liderSinValidar = !!opts.validacionLider && (opts.cumplimiento === '' || opts.cumplimiento === null || opts.cumplimiento === undefined);
+      if (liderSinValidar) {
+        // Objetivo registrado pero sin validación del líder: no se infiere cumplimiento (queda "no evaluado").
+        opts.cumplimiento = '';
+      } else if (!opts.ajusteManualLider) {
         // Cuando no hay ajuste del líder, la fuente de verdad visual es el
         // cálculo Result / Meta * 100. Esto corrige respuestas de Airtable
         // tipo percent (1.2) que representan 120%.

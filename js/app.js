@@ -701,12 +701,19 @@
       const scoreSelf = backendScoreSelf === null || backendScoreSelf === undefined || backendScoreSelf === ''
         ? (derivedScore ?? '') : backendScoreSelf;
       const pctLeader = o.leaderValidatedPercent ?? o.porcentajeValidadoLider ?? '';
-      const scoreLeader = o.leaderScore ?? o.calificacionLider ?? '';
-      S.saveObjetivo(localEvalId, idx, desc, result, leaderMode ? (scoreLeader || '') : (scoreSelf || ''), {
+      const backendScoreLeader = o.leaderScore ?? o.calificacionLider ?? '';
+      // El % validado por el líder es el dato autoritativo; si el backend no trae la calificación derivada,
+      // se obtiene con la regla oficial (0% válido => calificación 1; nunca se convierte null en 0).
+      const pctLeaderNum = (pctLeader === '' || pctLeader === null || pctLeader === undefined) ? null : Number(pctLeader);
+      const scoreLeader = (backendScoreLeader !== '' && backendScoreLeader !== null && backendScoreLeader !== undefined)
+        ? backendScoreLeader
+        : (pctLeaderNum !== null && Number.isFinite(pctLeaderNum) ? C.calificacionPorCumplimiento(pctLeaderNum) : '');
+      S.saveObjetivo(localEvalId, idx, desc, result, leaderMode ? (scoreLeader ?? '') : (scoreSelf || ''), {
         meta: goal,
         cumplimiento: leaderMode ? (pctLeader === null ? '' : pctLeader) : (pctSelf === null ? '' : pctSelf),
         cumplimientoAutomatico: pctSelf,
         calificacionAutomatica: scoreSelf,
+        validacionLider: !!leaderMode,
         ajusteManualLider: leaderMode && pctLeader !== '' && Number(pctLeader) !== Number(pctSelf),
         justificacionLider: o.leaderAdjustmentReason || o.justificacionAjusteLider || ''
       });
@@ -881,6 +888,8 @@
     const leaderEv = visible ? getOrCreateLocalEvaluation(me.empleado, liderId, 'lider', (d.evaluation && d.evaluation.leaderEvaluationId) || '', (d.evaluation && d.evaluation.leaderStatus) || '') : null;
     if (leaderEv) {
       (d.answers || []).filter(a => /l[ií]der|leader/i.test(String(a.evaluator || a.evaluador || ''))).forEach(a => mapRemoteAnswerToLocal(leaderEv.id, a));
+      // Validación del líder sobre los objetivos del colaborador (misma fila de objetivo; id relacionado por evaluación).
+      hydrateObjectives(leaderEv.id, d.objectives || [], true);
       if (leaderData) {
         leaderEv.fortalezas = leaderData.strengths || '';
         leaderEv.oportunidadesDesarrollo = leaderData.developmentOpportunities || '';
@@ -2404,8 +2413,14 @@
 
     // Objetivos N/A: confirmación explícita del líder, o resultado oficial sin promedio de objetivos
     // (ausencia de calificación no equivale a 0).
+    // N/A solo si: decisión explícita del líder, o el backend informa que no hay objetivos registrados
+    // (objectivesApplicable === false). Objetivos registrados sin validación => "Not evaluated"; nunca N/A por dato faltante.
+    const detObjApplicable = state?.remote?.detail?.evaluation?.objectivesApplicable;
     const objetivosNA = !!(liderEval?.objetivosNoAplicanConfirmados || liderEval?.objetivosNoAplican || liderEval?.objetivosNoAplicanDecision === 'confirmado'
-      || (resLider && (promedios.objetivos === null || promedios.objetivos === undefined)));
+      || detObjApplicable === false);
+    const objetivosSinValidar = !objetivosNA && resLider && (promedios.objetivos === null || promedios.objetivos === undefined);
+    const pctsObj = (liderEval ? S.getObjetivos(liderEval.id) : []).map(o => (o.cumplimiento === '' || o.cumplimiento === null || o.cumplimiento === undefined) ? NaN : Number(o.cumplimiento));
+    const pctValidadoObjetivos = (pctsObj.length && pctsObj.every(Number.isFinite)) ? pctsObj.reduce((x, y) => x + y, 0) / pctsObj.length : null;
     const seccionesCards = ['actitud', 'habilidades', 'objetivos'].map((s) => {
       const meta = D.SECCIONES_META[s];
       if (s === 'objetivos' && objetivosNA) {
@@ -2416,12 +2431,13 @@
         </div>`;
       }
       const val = puntajes[s];
+      if (s === 'objetivos' && objetivosSinValidar) return `<div class="seccion-card"><div class="seccion-card-title">${esc(meta.titulo)}</div><div class="seccion-card-val">Not evaluated</div></div>`;
       if (val === undefined || val === null || !Number.isFinite(Number(val))) return `<div class="seccion-card"><div class="seccion-card-title">${esc(meta.titulo)}</div><div class="seccion-card-val">Not available</div></div>`;
       const pctVal = (val !== undefined && val !== null && meta.peso) ? (val / meta.peso) * 100 : 0;
       return `<div class="seccion-card">
         <div class="seccion-card-title">${esc(meta.titulo)} <span class="peso-tag">${meta.peso}%</span></div>
         ${progressBar(pctVal)}
-        <div class="seccion-card-val">${f1(val)} of ${meta.peso} pts · average ${f1(promedios[s])}/5</div>
+        <div class="seccion-card-val">${f1(val)} of ${meta.peso} pts · average ${f1(promedios[s])}/5${s === 'objetivos' && pctValidadoObjetivos !== null ? ` · validated achievement ${f1(pctValidadoObjetivos)}%` : ''}</div>
       </div>`;
     }).join('');
 
