@@ -899,6 +899,12 @@
         S.persist();
       }
     }
+    // B2 es el promedio de herramientas aplicables (no una respuesta independiente): se deriva de las herramientas hidratadas.
+    [local, leaderEv].forEach(ev => {
+      if (!ev) return;
+      const vals = Object.values(S.getHerramientasEvaluacion(ev.id) || {}).filter(v => v !== '' && v !== null && v !== undefined && v !== 'N/A').map(Number).filter(Number.isFinite);
+      if (vals.length) S.saveRespuesta(ev.id, 'habilidades', 'B2', C.round1(vals.reduce((x, y) => x + y, 0) / vals.length), '');
+    });
     syncBackendResultsFromDetail(d, local, leaderEv);
     hydrateRemoteFeedback(d, me.empleado, state.periodo.id, leaderEv);
   }
