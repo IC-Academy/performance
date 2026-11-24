@@ -758,9 +758,11 @@
   function persistBackendResult(ev, metrics) {
     if (!ev || !ev.id || !metrics) return null;
     const existing = S.getResultado(ev.id);
-    const localFallback = existing || (() => {
-      try { return C.calcularResultado(S.getRespuestasPorSeccion(ev.id), S.getObjetivos(ev.id)); } catch (_) { return null; }
-    })();
+    // Siempre se recalcula desde los datos hidratados actuales: un resultado local previo (caché del navegador) puede
+    // haberse guardado sin objetivos/B2 y no debe prevalecer sobre lo que el backend entrega ahora.
+    const localFallback = (() => {
+      try { return C.calcularResultado(S.getRespuestasPorSeccion(ev.id), S.getObjetivos(ev.id)); } catch (_) { return existing || null; }
+    })() || existing;
     const promedios = Object.assign({}, (localFallback && localFallback.promedios) || {});
     const puntajes = Object.assign({}, (localFallback && localFallback.puntajes) || {});
     if (metrics.attitude !== null) promedios.actitud = metrics.attitude / 20;
