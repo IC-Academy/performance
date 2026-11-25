@@ -55,6 +55,15 @@
     card.classList.add('objective-result-restored-v24');
   }
 
+  // Fila -> fila de Leader Team (fuente única backend). El empleado se toma de la celda de persona (<small>).
+  function teamRowFor(row){
+    try{
+      const id=txt(row.querySelector('.backend-person-cell small'));
+      const data=App.getLeaderTeamData&&App.getLeaderTeamData();
+      const team=data&&Array.isArray(data.team)?data.team:[];
+      return id?team.find(x=>String(x.employeeId)===String(id))||null:null;
+    }catch(e){return null;}
+  }
   function friendlyProcessLabels(){
     document.querySelectorAll('table').forEach(table=>{
       const heads=Array.from(table.querySelectorAll('thead th')).map(h=>lower(txt(h)));
@@ -62,18 +71,23 @@
       table.querySelectorAll('tbody tr').forEach(row=>{
         const cell=row.children[idx]; if(!cell)return;
         const raw=lower(txt(cell));
-        if(raw==='released'||raw.includes('feedback_released')||raw.includes('result_released')) cell.innerHTML='<span class="badge workflow-state-action">Feedback available</span>';
+        const t=teamRowFor(row);
+        // "Feedback available" solo si el backend habilita realmente la retroalimentación (existe registro y resultado liberado).
+        if(raw==='released'||raw.includes('feedback_released')||raw.includes('result_released')){ if(t&&t.feedbackEnabled===true) cell.innerHTML='<span class="badge workflow-state-action">Feedback available</span>'; }
         else if(raw.includes('leader_submitted')) cell.innerHTML='<span class="badge badge-yellow">Pending calibration</span>';
         else if(raw.includes('pending_meeting')) cell.innerHTML='<span class="badge workflow-state-action">Pending meeting</span>';
         else if(raw.includes('pending_leader_signature')) cell.innerHTML='<span class="badge badge-red">Pending manager signature</span>';
         else if(raw.includes('pending_employee_signature')) cell.innerHTML='<span class="badge badge-yellow">Pending employee signature</span>';
       });
     });
+    // "Complete feedback" solo cuando el backend concede una acción real sobre un registro de Feedback existente.
     document.querySelectorAll('table tbody tr').forEach(row=>{
-      const t=lower(txt(row));
-      if(!/retroalimentaci[oó]n disponible|feedback available|released|pendiente de reuni[oó]n|pending meeting/.test(t))return;
-      const btn=Array.from(row.querySelectorAll('button,a.btn')).find(b=>/ver seguimiento|continuar|view progress|continue/i.test(lower(txt(b))));
-      if(btn){btn.textContent='Complete feedback →';btn.classList.add('workflow-action-primary','workflow-action-urgent');}
+      const t=teamRowFor(row);
+      const btn=Array.from(row.querySelectorAll('button,a.btn')).find(b=>/ver seguimiento|continuar|view progress|continue|complete feedback/i.test(lower(txt(b))));
+      if(!btn)return;
+      const actionable=!!(t&&t.feedbackEnabled===true&&t.feedbackId&&(t.canConfirmMeeting===true||t.canEditAgreements===true||t.canReleaseAgreements===true));
+      if(actionable){btn.textContent='Complete feedback →';btn.classList.add('workflow-action-primary','workflow-action-urgent');}
+      else if(/complete feedback/i.test(lower(txt(btn)))){btn.textContent='View progress →';btn.classList.remove('workflow-action-urgent');}
     });
   }
 

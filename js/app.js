@@ -634,6 +634,17 @@
   function apiTestCaptureMode() { return apiReadMode() && global.APP_CONFIG && global.APP_CONFIG.testCaptureEnabled === true && global.APP_CONFIG.writeApiEnabled !== true; }
   function apiEndpointEnabled(name) { return !!(global.APP_CONFIG && global.APP_CONFIG.apiEndpoints && global.APP_CONFIG.apiEndpoints[name]); }
   function apiData(resp) { return resp && Object.prototype.hasOwnProperty.call(resp, 'data') ? resp.data : resp; }
+  // El detalle de evaluación debe ser un objeto. Una respuesta vacía/null del backend NO se simula ni se oculta:
+  // se informa como error de carga para que ninguna vista acceda a propiedades de null (p. ej. detail.employee).
+  function requireDetail(resp) {
+    const d = apiData(resp);
+    if (!d || typeof d !== 'object' || Array.isArray(d)) {
+      const err = new Error('The evaluation file could not be loaded because the server returned an empty response. Please try again; if the problem persists, contact support.');
+      err.code = 'empty_detail';
+      throw err;
+    }
+    return d;
+  }
 
   function estadoBackendAInterno(valor) {
     const v = String(valor || '').toLowerCase();
@@ -879,7 +890,7 @@
   }
 
   async function refreshFeedbackDetail(evaluationId, colaboradorId, leaderEv) {
-    const fresh=apiData(await global.EDDApi.evaluationDetail(evaluationId,true));
+    const fresh=requireDetail(await global.EDDApi.evaluationDetail(evaluationId,true));
     try {
       const feedback=apiData(await global.EDDApi.getFeedback(evaluationId,true));
       if(feedback) fresh.feedback=feedback.feedback||feedback;
@@ -1096,7 +1107,7 @@
     if (!id || (state.remote.detail && !force)) return;
     state.remote.detailLoading = true;
     try {
-      state.remote.detail = apiData(await global.EDDApi.evaluationDetail(id, !!force));
+      state.remote.detail = requireDetail(await global.EDDApi.evaluationDetail(id, !!force));
       if(global.APP_CONFIG.features&&global.APP_CONFIG.features.postCalibrationEnabled){
         try{
           const feedback=apiData(await global.EDDApi.getFeedback(id,!!force));
@@ -3761,7 +3772,7 @@
       state.remote.loadingEvaluationId = String(evaluationId);
       try {
         showNotice('Loading the employee evaluation…','info');
-        const detail = apiData(await global.EDDApi.evaluationDetail(evaluationId));
+        const detail = requireDetail(await global.EDDApi.evaluationDetail(evaluationId));
         const team = (state.remote.team && state.remote.team.team) || [];
         const row = team.find(x => String(x.employeeId) === String(employeeId)) || {};
         const emp = detail.employee || {employeeId, name:row.name, position:row.position, area:row.area};
@@ -3793,7 +3804,7 @@
       state.remote.loadingEvaluationId=String(evaluationId);
       try {
         showNotice('Loading progress and feedback…','info');
-        const detail=apiData(await global.EDDApi.evaluationDetail(evaluationId,true));
+        const detail=requireDetail(await global.EDDApi.evaluationDetail(evaluationId,true));
         state.remote.detail=detail;
         const row=((state.remote.team&&state.remote.team.team)||[]).find(x=>String(x.employeeId)===String(employeeId))||{};
         const emp=detail.employee||{employeeId,name:row.name,position:row.position,area:row.area};
@@ -3827,7 +3838,7 @@
       if (!apiReadMode() || state.remote.detailLoading || !evaluationId) return;
       state.remote.detailLoading = true; state.remote.detailError = null;
       try {
-        const detail = apiData(await (state.user.perfil === 'calibrador' ? global.EDDApi.calibrationDetail(evaluationId) : global.EDDApi.evaluationDetail(evaluationId, true)));
+        const detail = requireDetail(await (state.user.perfil === 'calibrador' ? global.EDDApi.calibrationDetail(evaluationId) : global.EDDApi.evaluationDetail(evaluationId, true)));
         state.remote.detail = detail; state.remote.detailRetry = 0;
         // Hidrata una copia local únicamente para reutilizar componentes visuales históricos;
         // la fuente de verdad sigue siendo backend y no se sustituye con datos demo.
@@ -4258,7 +4269,7 @@
           await global.EDDApi.saveSelfDraft(backendId, selfDraftPayload(evaluacionId, backendId));
           await global.EDDApi.submitSelf(backendId);
           try {
-            const fresh = apiData(await global.EDDApi.evaluationDetail(backendId, { force:true }));
+            const fresh = requireDetail(await global.EDDApi.evaluationDetail(backendId, { force:true }));
             state.remote.detail = fresh;
             const localEv = S.load().evaluaciones.find(e=>e.id===evaluacionId);
             if (localEv) syncBackendResultsFromDetail(fresh, localEv, null);
@@ -4427,7 +4438,7 @@
           // el botón ni el mensaje de éxito. Si el GET tarda, la pantalla permite reintentar.
           setTimeout(async()=>{
             try {
-              const fresh = apiData(await global.EDDApi.evaluationDetail(backendId, true));
+              const fresh = requireDetail(await global.EDDApi.evaluationDetail(backendId, true));
               state.remote.detail = fresh; state.remote.detailError = null;
               const autoEv = S.getEvaluacion(colaboradorId, state.periodo.id, 'autoevaluacion');
               const leaderEv = S.load().evaluaciones.find(e=>e.id===evaluacionId);
