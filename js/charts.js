@@ -76,9 +76,13 @@
     const n = dimensiones.length || 1;
     const angleStep = (2 * Math.PI) / n;
 
+    const EXPECTED = 3; // Expected Performance = 100% de cumplimiento (metodología institucional)
+    const validVal = (v) => v !== null && v !== undefined && v !== '' && v !== 'N/A' && Number.isFinite(Number(v));
+    // Un valor N/A o vacío NUNCA se representa como cero: devuelve null y el punto no se dibuja.
     function xy(valor, i) {
+      if (!validVal(valor)) return null;
       const angle = -Math.PI / 2 + i * angleStep;
-      const v = (valor === null || valor === undefined || isNaN(valor)) ? 0 : Math.max(0, Math.min(5, Number(valor)));
+      const v = Math.max(0, Math.min(5, Number(valor)));
       const r = (v / 5) * maxR;
       return [center + r * Math.cos(angle), center + r * Math.sin(angle)];
     }
@@ -111,18 +115,31 @@
       axesSvg += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" font-size="11" fill="#0b2545" font-weight="700" text-anchor="${anchor}" dominant-baseline="middle">${esc(d.label)}</text>`;
     });
 
-    function serie(valores, color, dash) {
+    function serie(valores, color, dash, name) {
       if (!valores) return '';
       const pts = dimensiones.map((d, i) => xy(valores[d.key], i));
-      const ptsStr = pts.map((p) => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+      const valid = pts.filter(Boolean);
+      const ptsStr = valid.map((p) => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+      const allValid = valid.length === pts.length && valid.length >= 3;
+      const dashAttr = dash ? ` stroke-dasharray="${dash}"` : '';
+      const shape = allValid
+        ? `<polygon points="${ptsStr}" fill="${color}" fill-opacity="0.14" stroke="${color}" stroke-width="2"${dashAttr}/>`
+        : (valid.length >= 2 ? `<polyline points="${ptsStr}" fill="none" stroke="${color}" stroke-width="2"${dashAttr}/>` : '');
       const circles = pts.map((p, i) => {
-        const key = dimensiones[i].key;
-        const val = valores[key];
-        const sinDatos = val === null || val === undefined || isNaN(val);
-        const title = dimensiones[i].label + ': ' + (sinDatos ? 'no data (N/A)' : fmt(val));
+        if (!p) return '';
+        const val = valores[dimensiones[i].key];
+        const title = (name ? name + ' — ' : '') + dimensiones[i].label + ': ' + fmt(val) + ' / 5';
         return `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4" fill="${color}" stroke="#fff" stroke-width="1"><title>${esc(title)}</title></circle>`;
       }).join('');
-      return `<polygon points="${ptsStr}" fill="${color}" fill-opacity="0.14" stroke="${color}" stroke-width="2"${dash ? ` stroke-dasharray="${dash}"` : ''}/>${circles}`;
+      return shape + circles;
+    }
+
+    // Serie de referencia: Expected Performance = 3 en todos los ejes (línea gris punteada).
+    function serieEsperada() {
+      const pts = dimensiones.map((d, i) => xy(EXPECTED, i));
+      const ptsStr = pts.map((p) => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+      const circles = pts.map((p, i) => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="#8a96a6" stroke="#fff" stroke-width="1"><title>${esc('Expected Performance — ' + dimensiones[i].label + ': 3 / 5 (100% compliance)')}</title></circle>`).join('');
+      return `<polygon points="${ptsStr}" fill="none" stroke="#8a96a6" stroke-width="2" stroke-dasharray="6,5"/>${circles}`;
     }
 
     // Serie calibrada: proyeccin proporcional de la forma del lder.
@@ -139,28 +156,30 @@
       calibNota = 'The "Calibrated" series is a proportional projection of the manager evaluation shape (factor ' + factor.toFixed(2) + '×), because OD calibration adjusts the overall result rather than each section independently. It does not represent new individual responses.';
     }
 
-    const svg = `<svg viewBox="0 0 ${size} ${size}" class="radar-svg" role="img" aria-label="Competency radar chart">
+    const svg = `<svg viewBox="0 0 ${size} ${size}" class="radar-svg" role="img" aria-label="Competency radar chart, scale 0 to 5, with Expected Performance at 3">
       ${gridSvg}${axesSvg}
-      ${serie(autoevaluacion, '#3b82c4')}
-      ${serie(evaluacionLider, '#e0731c')}
-      ${calibValores ? serie(calibValores, '#28a745', '5,4') : ''}
+      ${serieEsperada()}
+      ${serie(autoevaluacion, '#3b82c4', '', 'Self-assessment')}
+      ${serie(evaluacionLider, '#e0731c', '', 'Manager evaluation')}
+      ${calibValores ? serie(calibValores, '#28a745', '5,4', 'Calibrated') : ''}
     </svg>`;
 
     const leyenda = `<div class="radar-legend">
       <span class="radar-legend-item"><span class="radar-dot" style="background:#3b82c4"></span>Self-assessment</span>
       <span class="radar-legend-item"><span class="radar-dot" style="background:#e0731c"></span>Manager evaluation</span>
+      <span class="radar-legend-item"><span style="display:inline-block;width:18px;border-top:2px dashed #8a96a6;margin-right:6px;vertical-align:middle"></span>Expected Performance (3 = 100%)</span>
       ${calibValores ? '<span class="radar-legend-item"><span class="radar-dot radar-dot-dashed" style="background:#28a745"></span>Calibrated (proportional projection)</span>' : ''}
     </div>`;
 
     const tabla = `<table class="table table-compact radar-table"><thead><tr>
-      <th>Section</th><th>Autoeval.</th><th>Manager</th>${calibValores ? '<th>Calibrated*</th>' : ''}
+      <th>Section</th><th>Self-assessment</th><th>Manager</th><th>Expected</th>${calibValores ? '<th>Calibrated*</th>' : ''}
     </tr></thead><tbody>
-      ${dimensiones.map((d) => `<tr><td>${esc(d.label)}</td><td>${fmt(autoevaluacion && autoevaluacion[d.key])}</td><td>${fmt(evaluacionLider && evaluacionLider[d.key])}</td>${calibValores ? `<td>${fmt(calibValores[d.key])}</td>` : ''}</tr>`).join('')}
+      ${dimensiones.map((d) => `<tr><td>${esc(d.label)}</td><td>${fmt(autoevaluacion && autoevaluacion[d.key])}</td><td>${fmt(evaluacionLider && evaluacionLider[d.key])}</td><td>3</td>${calibValores ? `<td>${fmt(calibValores[d.key])}</td>` : ''}</tr>`).join('')}
     </tbody></table>`;
 
     return `<div class="radar-wrap">
       <div class="radar-chart">${svg}</div>
-      <div class="radar-side">${leyenda}${tabla}${calibNota ? `<p class="muted radar-note">*${esc(calibNota)}</p>` : ''}</div>
+      <div class="radar-side">${leyenda}${tabla}<p class="muted radar-note">Scale 0–5. Expected Performance = 3 (100% compliance). 5 = maximum performance (120% compliance or higher). N/A values are not plotted.</p>${calibNota ? `<p class="muted radar-note">*${esc(calibNota)}</p>` : ''}</div>
     </div>`;
   }
 
@@ -360,7 +379,7 @@
     const dimensiones = opts.dimensiones || [];
     const auto = opts.autoevaluacion || {};
     const lider = opts.evaluacionLider || {};
-    const ideal = opts.ideal || 5;
+    const ideal = opts.ideal || 3; // Expected Performance = 3 (100% de cumplimiento)
     const size = opts.size || 520;
     const center = size / 2;
     const maxR = size / 2 - 118;
@@ -405,31 +424,37 @@
       grid += `<text x="${lx.toFixed(1)}" y="${startY.toFixed(1)}" text-anchor="${anchor}" class="performance-wheel-label">${lines.map((line,idx)=>`<tspan x="${lx.toFixed(1)}" dy="${idx===0?0:lineH}">${esc(line)}</tspan>`).join('')}</text>`;
     });
 
-    function series(values,color,opacity,dash){
-      const valid = v => v !== null && v !== undefined && v !== '' && v !== 'N/A' && Number.isFinite(Number(v)) && Number(v)>=1 && Number(v)<=5;
+    function series(values,color,opacity,dash,name){
+      const valid = v => v !== null && v !== undefined && v !== '' && v !== 'N/A' && Number.isFinite(Number(v)) && Number(v)>=0 && Number(v)<=5;
       const pts=dimensiones.map((d,i)=>valid(values[d.key])?xy(values[d.key],i):null);
-      const pstr=pts.filter(Boolean).map(p=>`${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+      const vp=pts.filter(Boolean);
+      const pstr=vp.map(p=>`${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
       const dots=pts.map((p,i)=>{
         const d=dimensiones[i], v=values[d.key];
         if(!p) return '';
-        return `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4.2" fill="${color}" stroke="#fff" stroke-width="1.4"><title>${esc(d.label)}: ${fmt(v)}</title></circle>`;
+        const tip=(name?name+' — ':'')+d.label+': '+fmt(v)+' / 5'+(name==='Expected Performance'?' (100% compliance)':'');
+        return `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4.2" fill="${color}" stroke="#fff" stroke-width="1.4"><title>${esc(tip)}</title></circle>`;
       }).join('');
-      return `${pts.every(Boolean)?`<polygon points="${pstr}" fill="${color}" fill-opacity="${opacity}" stroke="${color}" stroke-width="2.4" ${dash?`stroke-dasharray="${dash}"`:''}/>`:''}${dots}`;
+      const dashAttr=dash?`stroke-dasharray="${dash}"`:'';
+      const shape = (vp.length===pts.length && vp.length>=3)
+        ? `<polygon points="${pstr}" fill="${color}" fill-opacity="${opacity}" stroke="${color}" stroke-width="2.4" ${dashAttr}/>`
+        : (vp.length>=2 ? `<polyline points="${pstr}" fill="none" stroke="${color}" stroke-width="2.4" ${dashAttr}/>` : '');
+      return shape+dots;
     }
     const idealValues={}; dimensiones.forEach(d=>idealValues[d.key]=ideal);
-    const svg=`<svg viewBox="0 0 ${size} ${size}" class="performance-wheel-svg" role="img" aria-label="Multidimensional performance profile">${grid}${series(idealValues,'#a8b5c4',0,'6,5')}${series(auto,'#2f7dd3',.11,'')}${series(lider,'#e27a24',.10,'')}</svg>`;
+    const svg=`<svg viewBox="0 0 ${size} ${size}" class="performance-wheel-svg" role="img" aria-label="Multidimensional performance profile, scale 0 to 5, Expected Performance 3">${grid}${series(idealValues,'#8a96a6',0,'6,5','Expected Performance')}${series(auto,'#2f7dd3',.11,'','Self-assessment')}${series(lider,'#e27a24',.10,'','Manager evaluation')}</svg>`;
 
     const details=dimensiones.map(d=>{
       const validScore = v => v !== null && v !== undefined && v !== '' && v !== 'N/A' && Number.isFinite(Number(v)) && Number(v)>=1 && Number(v)<=5;
       const aOk=validScore(auto[d.key]), lOk=validScore(lider[d.key]);
       const a=aOk?Number(auto[d.key]):null, l=lOk?Number(lider[d.key]):null;
-      const gapIdeal=lOk ? (ideal-l) : null;
+      const gapIdeal=lOk ? (l-ideal) : null; // positivo = por encima de lo esperado
       const gapPerception=(aOk&&lOk) ? (a-l) : null;
-      const cls=gapIdeal===null?'neutral':gapIdeal<=.5?'good':gapIdeal<=1.25?'mid':'attention';
-      return `<div class="performance-dimension-row ${cls}"><div><strong>${esc(d.label)}</strong><small>${lOk?`Manager ${fmt(l)}/5 · Ideal ${fmt(ideal)}/5`:(d.key==='objetivos'?(aOk?'Not evaluated by manager':'Not applicable (no objectives this period)'):'No manager evaluation')}</small></div><div class="performance-gap-values"><span>${gapIdeal===null?'—':`-${gapIdeal.toFixed(1)} ideal`}</span><b>${gapPerception===null?'—':`${gapPerception>0?'+':''}${gapPerception.toFixed(1)} perception`}</b></div></div>`;
+      const cls=gapIdeal===null?'neutral':gapIdeal>=0?'good':gapIdeal>=-.5?'mid':'attention';
+      return `<div class="performance-dimension-row ${cls}"><div><strong>${esc(d.label)}</strong><small>${lOk?`Manager ${fmt(l)}/5 · Expected ${fmt(ideal)}/5`:(d.key==='objetivos'?(aOk?'Not evaluated by manager':'Not applicable (no objectives this period)'):'No manager evaluation')}</small></div><div class="performance-gap-values"><span>${gapIdeal===null?'—':`${gapIdeal>0?'+':''}${gapIdeal.toFixed(1)} vs expected`}</span><b>${gapPerception===null?'—':`${gapPerception>0?'+':''}${gapPerception.toFixed(1)} perception`}</b></div></div>`;
     }).join('');
 
-    return `<div class="performance-wheel-wrap"><div class="performance-wheel-main">${svg}<div class="performance-wheel-legend"><span><i class="pw-dot auto"></i>Self-assessment</span><span><i class="pw-dot leader"></i>Manager evaluation</span><span><i class="pw-line ideal"></i>Expected ideal 5/5</span></div></div><div class="performance-wheel-side"><div class="performance-reading-note"><strong>How to read this profile</strong><p>The distance to the edge shows how close each competency is to the ideal level. The gap between blue and orange shows the difference in perception between employee and manager.</p></div><div class="performance-dimensions">${details}</div></div></div>`;
+    return `<div class="performance-wheel-wrap"><div class="performance-wheel-main">${svg}<div class="performance-wheel-legend"><span><i class="pw-dot auto"></i>Self-assessment</span><span><i class="pw-dot leader"></i>Manager evaluation</span><span><i class="pw-line ideal"></i>Expected Performance (3/5 = 100%)</span></div></div><div class="performance-wheel-side"><div class="performance-reading-note"><strong>How to read this profile</strong><p>Scale 0–5. The dashed gray line is Expected Performance (3 = 100% compliance); the outer edge (5) is maximum performance (120% compliance or higher). The gap between blue and orange shows the difference in perception between employee and manager. N/A values are not plotted.</p></div><div class="performance-dimensions">${details}</div></div></div>`;
   }
 
   // ===========================================================================

@@ -147,9 +147,9 @@
     const sections = [['actitud','Values and attitude'],['habilidades','Technical and functional'],['objetivos','Goals']];
     return `<div class="performance-summary-strip">${sections.map(([k,label])=>{
       const a=num(autoProm[k]), l=num(leaderProm[k]);
-      const ideal=l==null?null:5-l, perception=(a==null||l==null)?null:a-l;
-      const cls=ideal==null?'neutral':ideal<=.5?'good':ideal<=1.25?'mid':'attention';
-      return `<article class="performance-summary-card ${cls}"><span>${label}</span><strong>${l==null?'—':fmt(l)}<small>/5 manager</small></strong><div><b>${ideal==null?'—':fmt(ideal)+' pts to ideal'}</b><em>${perception==null?'—':(perception>0?'+':'')+fmt(perception)+' self vs manager'}</em></div></article>`;
+      const ideal=l==null?null:l-3, perception=(a==null||l==null)?null:a-l;
+      const cls=ideal==null?'neutral':ideal>=0?'good':ideal>=-.5?'mid':'attention';
+      return `<article class="performance-summary-card ${cls}"><span>${label}</span><strong>${l==null?'—':fmt(l)}<small>/5 manager</small></strong><div><b>${ideal==null?'—':(ideal>0?'+':'')+fmt(ideal)+' vs expected (3)'}</b><em>${perception==null?'—':(perception>0?'+':'')+fmt(perception)+' self vs manager'}</em></div></article>`;
     }).join('')}</div>`;
   }
 
@@ -164,7 +164,7 @@
     const radar = Charts.renderRadarChart({autoevaluacion:data.autoProm, evaluacionLider:data.leaderProm});
     section.dataset.unifiedV23 = '1';
     section.innerHTML = `
-      <div class="performance-profile-head"><div><span class="admin-section-kicker">MULTIDIMENSIONAL VIEW</span><h2>Performance profile vs. ideal</h2><p>This view uses the same source and calculation as the manager comparison: competencies, consolidated B.2 tools, and goals from the evaluation record.</p></div><span class="calibration-source-badge-v23">SAME VIEW AS MANAGER</span></div>
+      <div class="performance-profile-head"><div><span class="admin-section-kicker">MULTIDIMENSIONAL VIEW</span><h2>Performance profile vs. expected performance</h2><p>This view uses the same source and calculation as the manager comparison: competencies, consolidated B.2 tools, and goals from the evaluation record.</p></div><span class="calibration-source-badge-v23">SAME VIEW AS MANAGER</span></div>
       ${summaryStrip(data.autoProm,data.leaderProm)}
       ${wheel}
       <details class="performance-summary-details"><summary>View executive summary of 3 dimensions</summary><div class="feedback-analysis-single"><div><h3>Executive radar</h3>${radar}</div></div></details>`;

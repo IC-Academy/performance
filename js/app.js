@@ -2427,9 +2427,9 @@
       const scoreOrNull = value => (value === null || value === undefined || value === '' || value === 'N/A') ? null : (Number.isFinite(Number(value)) ? Number(value) : null);
       const a=scoreOrNull((resAuto?.promedios || {})[k]), l=scoreOrNull((resLider?.promedios || {})[k]);
       const lOk=l !== null, aOk=a !== null;
-      const idealGap=lOk?5-l:null, perception=(aOk&&lOk)?a-l:null;
-      const cls=idealGap===null?'neutral':idealGap<=.5?'good':idealGap<=1.25?'mid':'attention';
-      return `<article class="performance-summary-card ${cls}"><span>${esc(label)}</span><strong>${lOk?l.toFixed(1):'—'}<small>/5 manager</small></strong><div><b>${idealGap===null?'—':`${idealGap.toFixed(1)} pts below ideal`}</b><em>${perception===null?'—':`${perception>0?'+':''}${perception.toFixed(1)} self vs manager`}</em></div></article>`;
+      const idealGap=lOk?l-3:null, perception=(aOk&&lOk)?a-l:null;
+      const cls=idealGap===null?'neutral':idealGap>=0?'good':idealGap>=-.5?'mid':'attention';
+      return `<article class="performance-summary-card ${cls}"><span>${esc(label)}</span><strong>${lOk?l.toFixed(1):'—'}<small>/5 manager</small></strong><div><b>${idealGap===null?'—':`${idealGap>0?'+':''}${idealGap.toFixed(1)} vs expected (3)`}</b><em>${perception===null?'—':`${perception>0?'+':''}${perception.toFixed(1)} self vs manager`}</em></div></article>`;
     }).join('')}</div>`;
   }
 
@@ -2929,7 +2929,7 @@
       </div>
       <p>Overall gap: ${badge(brechaGeneral.etiqueta, brechaGeneral.etiqueta === 'Aligned' ? 'green' : (brechaGeneral.etiqueta === 'Review' ? 'yellow' : 'red'))}</p>
       <section class="performance-profile-section leader-performance-profile">
-        <div class="performance-profile-head"><div><span class="admin-section-kicker">MULTIDIMENSIONAL VIEW</span><h3>Performance profile vs. ideal</h3><p>The wheel shows where employee and manager are aligned, and in which dimensions both remain far from the expected standard.</p></div></div>
+        <div class="performance-profile-head"><div><span class="admin-section-kicker">MULTIDIMENSIONAL VIEW</span><h3>Performance profile vs. expected performance</h3><p>The wheel shows where employee and manager are aligned, and in which dimensions both remain far from the expected standard.</p></div></div>
         ${renderSectionGapSummary(resAuto,resLider)}
         ${performanceWheelHtml}
         <details class="performance-summary-details"><summary>View executive summary of 3 dimensions</summary>${radarHtml}</details>
@@ -3472,7 +3472,7 @@
 
           ${!detailReady?`<article class="admin-panel calibration-loading-detail ${state.remote.detailError?'has-error':''}">${state.remote.detailError?'':`<div class="backend-spinner"></div>`}<div><span class="admin-section-kicker">${state.remote.detailError?'FILE NOT AVAILABLE':'LOADING FILE'}</span><h2>${state.remote.detailError?'We could not load the full details':'Retrieving answers, objectives, and manager context…'}</h2><p>${state.remote.detailError?esc(state.remote.detailError):'The information will be available as soon as loading finishes.'}</p>${state.remote.detailError?`<button class="btn btn-primary btn-sm" onclick="App.reintentarDetalleCalibracion('${esc(item.employeeId)}','${esc(item.evaluationId)}')">Retry loading file</button>`:''}</div></article>`:`
           <section class="performance-profile-section calibration-performance-profile remote-performance-profile">
-            <div class="performance-profile-head"><div><span class="admin-section-kicker">MULTIDIMENSIONAL VIEW</span><h2>Performance profile vs. ideal</h2><p>Compares the employee's self-perception, the manager's evaluation, and the distance of each dimension from the ideal level of 5/5.</p></div></div>
+            <div class="performance-profile-head"><div><span class="admin-section-kicker">MULTIDIMENSIONAL VIEW</span><h2>Performance profile vs. expected performance</h2><p>Compares the employee's self-perception, the manager's evaluation, and the position of each dimension relative to Expected Performance (3/5 = 100% compliance).</p></div></div>
             ${sectionGapSummary}
             ${performanceWheel}
             <details class="performance-summary-details"><summary>View executive summary of 3 dimensions</summary><div class="feedback-analysis-single"><div><h3>Radar ejecutivo</h3>${radar}</div></div></details>
@@ -3553,7 +3553,7 @@
       ${benchmarkHtml}
 
       <section class="performance-profile-section calibration-performance-profile">
-        <div class="performance-profile-head"><div><span class="admin-section-kicker">MULTIDIMENSIONAL VIEW</span><h2>Performance profile vs. ideal</h2><p>The same view used in the evaluation comparison: it shows the employee's self-perception, the manager's evaluation, and the distance of each competency from the expected ideal of 5/5.</p></div></div>
+        <div class="performance-profile-head"><div><span class="admin-section-kicker">MULTIDIMENSIONAL VIEW</span><h2>Performance profile vs. expected performance</h2><p>The same view used in the evaluation comparison: it shows the employee's self-perception, the manager's evaluation, and the distance of each competency from the expected ideal of 5/5.</p></div></div>
         ${renderSectionGapSummary(resAuto,resLider)}
         ${performanceWheelHtml}
         <details class="performance-summary-details"><summary>View executive summary of 3 dimensions</summary>${radarHtml}</details>
