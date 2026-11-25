@@ -16,11 +16,8 @@
   }
 
   function needsLeaderSignature(item) {
-    if (item && item.readOnly === true) return false;
-    if (item.leaderSignaturePending === true) return true;
-    const feedback = lower(item.feedbackState || item.feedbackStatus || item.processState);
-    const leaderSigned = item.leaderSigned === true || item.leaderSignature === true || /firma.*l[ií]der.*completa|firmado.*l[ií]der|manager signature complete|signed by manager/.test(feedback);
-    return !leaderSigned && /lista para firma|pendiente firma l[ií]der|pending leader signature|ready for signature/.test(feedback);
+    // Fuente única: contrato del backend (Leader Team). Sin inferencia por texto ni por estado local.
+    return !!(item && item.readOnly !== true && item.leaderSignaturePending === true && item.canSignAsLeader === true);
   }
 
   function humanizeTechnicalStates(root) {
@@ -93,6 +90,7 @@
   let adminRetryAfter = 0;
   let leaderCache = null;
   async function getLeaderTeam(force) {
+    if (typeof App.getLeaderTeamData === 'function') { const d = App.getLeaderTeamData(); if (d && Array.isArray(d.team)) return d; }
     if (!hasSession() || Date.now() < leaderRetryAfter || !API || typeof API.leaderTeam !== 'function') return null;
     if (leaderCache && !force && Date.now() - leaderCache.at < 15000) return leaderCache.data;
     try {
@@ -109,8 +107,8 @@
     const team = data && Array.isArray(data.team) ? data.team : [];
     const pending = team.filter(needsLeaderEvaluation).length;
     const signatures = team.filter(needsLeaderSignature).length;
-    setNavBadge(findNavItem(/Pending evaluations|Pendientes por evaluar/i), pending, 'attention');
-    setNavBadge(findNavItem(/Pending signatures|Por firmar/i), signatures, 'danger');
+    // Los marcadores de navegación los dibuja renderHeader() (app.js) con el mismo contrato; aquí solo se limpian duplicados.
+    document.querySelectorAll('nav .workflow-nav-badge, header .workflow-nav-badge').forEach(b => b.remove());
 
     const host = document.querySelector('.backend-live-section, .premium-evaluation-main, main, #app-root');
     if (host && (pending || signatures) && !document.querySelector('.workflow-leader-alert')) {
@@ -145,12 +143,17 @@
 
   async function repairLeaderQueues() {
     if (!hasSession() || (location.hash.indexOf('/lider/pendientes') === -1 && location.hash.indexOf('/lider/firmas') === -1)) return;
+    const hashAtStart = location.hash;
     const data = await getLeaderTeam(false);
+    if (location.hash !== hashAtStart) return; // el usuario cambió de vista mientras se esperaba la respuesta
     const team = data && Array.isArray(data.team) ? data.team : [];
     const isPending = location.hash.indexOf('/lider/pendientes') !== -1;
     const rows = isPending ? team.filter(needsLeaderEvaluation) : team.filter(needsLeaderSignature);
     const table = Array.from(document.querySelectorAll('.backend-live-section table')).find(t => /Name|Nombre/i.test(txt(t.querySelector('thead'))));
     if (!table) return;
+    const card = table.closest('.card'); const heading = card && card.querySelector('h2');
+    const headingText = lower(txt(heading));
+    if (isPending ? !/^pending evaluations/.test(headingText) : !/^pending signatures/.test(headingText)) return; // la tabla visible no es la de esta cola
     const tbody = table.querySelector('tbody');
     if (!tbody) return;
     const key = (isPending ? 'pending:' : 'sign:') + rows.map(x => String(x.employeeId || x.id || '') + ':' + String(x.evaluationId || '')).join('|');

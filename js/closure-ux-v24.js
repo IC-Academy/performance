@@ -78,6 +78,9 @@
   }
 
   function ensureLeaderFeedbackBadge(){
+    // Desactivado: contaba filas por texto del DOM (fuente distinta del backend). Los marcadores los dibuja renderHeader() con Leader Team.
+    document.querySelectorAll('.feedback-action-banner-v24').forEach(el=>el.remove());
+    return;
     if(!/\/lider\//.test(location.hash))return;
     const rows=Array.from(document.querySelectorAll('table tbody tr'));
     const count=rows.filter(r=>/retroalimentaci[oó]n disponible|feedback available|pending_meeting|released|completar retroalimentaci[oó]n|complete feedback/i.test(lower(txt(r)))).length;

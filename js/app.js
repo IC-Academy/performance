@@ -888,6 +888,7 @@
     }
     state.remote.detail=fresh; state.remote.detailError=null;
     hydrateRemoteFeedback(fresh,String(colaboradorId),state.periodo.id,leaderEv||S.getEvaluacion(String(colaboradorId),state.periodo.id,'lider'));
+    if(state.user && state.user.perfil==='lider') { try { const t=apiData(await global.EDDApi.leaderTeam(true)); if(t && Array.isArray(t.team)) state.remote.team=t; } catch(_) {} }
     return fresh;
   }
 
@@ -1067,7 +1068,7 @@
       // puede ejecutarlos concurrentemente aunque n8n no paralelice nodos dentro
       // de un workflow. Esto reduce el tiempo de entrada al portal del líder/DO.
       const jobs = [global.EDDApi.evaluationsMine(!!force).then(r => { state.remote.mine = apiData(r); })];
-      if (state.user && state.user.perfil === 'lider') jobs.push(global.EDDApi.leaderTeam(!!force).then(r => { state.remote.team = apiData(r); }));
+      if (state.user && state.user.perfil === 'lider') jobs.push(global.EDDApi.leaderTeam(!!force).then(r => { const t = apiData(r); if (!t || !Array.isArray(t.team)) throw new Error('The team data could not be loaded. Please try again.'); state.remote.team = t; }));
       if (state.user && state.user.perfil === 'administrador') {
         if (apiEndpointEnabled('adminDashboard')) jobs.push(global.EDDApi.adminDashboard(!!force).then(r => { state.remote.dashboard = apiData(r); }));
         jobs.push(global.EDDApi.adminCalibration(!!force).then(r => { state.remote.calibration = apiData(r); }));
@@ -1285,6 +1286,19 @@
   // =========================================================================
   // HEADER / NAV / FOOTER
   // =========================================================================
+  // Fuente única de verdad para marcadores, KPIs y tablas del líder: el contrato del backend (Leader Team).
+  function leaderQueueCounts() {
+    const data = state.remote && state.remote.team;
+    const team = data && Array.isArray(data.team) ? data.team : [];
+    const ts = global.EDDLeaderTeamState;
+    const own = team.filter(x => x && x.readOnly !== true);
+    return {
+      evaluations: own.filter(x => ts && ts.needsLeaderEvaluation(x)).length,
+      signatures: own.filter(x => x.leaderSignaturePending === true && x.canSignAsLeader === true).length,
+      feedbackActions: own.filter(x => x.canConfirmMeeting === true || x.canEditAgreements === true || x.canReleaseAgreements === true).length
+    };
+  }
+
   function renderHeader(area, page) {
     const u = state.user;
     const per = state.periodo;
@@ -1300,16 +1314,19 @@
       tabs = [['dashboard', 'Dashboard'], ['calibracion', 'Calibration'], ['9box', '9-Box Matrix'], ['usuarios', 'Users'], ['config', 'Settings']];
     }
     const retroPendiente = u.perfil === 'colaborador' && state.periodo && (() => { const cal=S.getCalibracion(u.empleado, state.periodo.id); return !!(cal && cal.retroHabilitada && !cal.aceptacionColaborador); })();
-    const firmasPendientesLider = u.perfil === 'lider' && state.periodo ? S.getColaboradoresDeLider(u.empleado).filter((c) => { const cal = S.getCalibracion(c.empleado, state.periodo.id); return !!(cal && cal.acuerdosLiberados && !cal.firmaLider); }).length : 0;
+    const colasLider = u.perfil === 'lider' ? leaderQueueCounts() : { signatures: 0, feedbackActions: 0, evaluations: 0 };
+    const firmasPendientesLider = colasLider.signatures;
     const navHtml = tabs.map((t) => {
       const esRetro = u.perfil === 'colaborador' && t[0] === 'retroalimentacion';
       const esFirma = u.perfil === 'lider' && t[0] === 'firmas';
       const esMiEvaluacion = u.perfil === 'lider' && t[0] === 'mi-inicio';
       const estadoPropio = esMiEvaluacion ? S.estadoProceso(u.empleado, state.periodo.id) : null;
       const autoPropiaPendiente = esMiEvaluacion && [D.ESTADOS.NO_INICIADA, D.ESTADOS.EN_PROGRESO].includes(estadoPropio);
-      const atencion = (esRetro && retroPendiente) || (esFirma && firmasPendientesLider > 0) || autoPropiaPendiente;
-      const badgeCount = esRetro && retroPendiente ? 1 : esFirma ? firmasPendientesLider : autoPropiaPendiente ? 1 : 0;
-      const titulo = esRetro ? 'Feedback available' : esFirma ? 'Agreements pending signature' : 'Your self-assessment is pending';
+      const esEquipo = u.perfil === 'lider' && t[0] === 'dashboard';
+      const esPendientes = u.perfil === 'lider' && t[0] === 'pendientes';
+      const atencion = (esRetro && retroPendiente) || (esFirma && firmasPendientesLider > 0) || (esEquipo && colasLider.feedbackActions > 0) || (esPendientes && colasLider.evaluations > 0) || autoPropiaPendiente;
+      const badgeCount = esRetro && retroPendiente ? 1 : esFirma ? firmasPendientesLider : esEquipo ? colasLider.feedbackActions : esPendientes ? colasLider.evaluations : autoPropiaPendiente ? 1 : 0;
+      const titulo = esRetro ? 'Feedback available' : esFirma ? 'Agreements pending your signature' : esEquipo ? 'Feedback actions pending' : esPendientes ? 'Evaluations pending' : 'Your self-assessment is pending';
       return `<a href="#/${area === 'colaborador' ? 'colaborador' : area}/${t[0]}" class="${page === t[0] ? 'active' : ''}${atencion ? ' nav-attention' : ''}">${t[1]}${atencion ? `<span class="nav-notification-dot" title="${titulo}">${badgeCount}</span>` : ''}</a>`;
     }).join('');
     const iniciales = esc((u.nombre || '').split(/\s+/).slice(0,2).map(x => x[0] || '').join('').toUpperCase());
@@ -2615,14 +2632,14 @@
     const teamState = global.EDDLeaderTeamState;
     let team = Array.isArray(data.team) ? data.team.slice() : [];
     if (soloPendientes) team = team.filter(x => teamState.needsLeaderEvaluation(x));
-    if (soloFirmas) team = team.filter(x => !!x.leaderSignaturePending);
+    if (soloFirmas) team = team.filter(x => x.readOnly !== true && x.leaderSignaturePending === true && x.canSignAsLeader === true);
     const sharedAccess = !!(data.access && data.access.readOnly === true);
     const sharedOwners = sharedAccess ? (data.access.owners || []).map(o => o.name || o.ownerId).filter(Boolean).join(', ') : '';
     const readOnlyBanner = sharedAccess ? `<div class="card" role="status" style="margin-bottom:16px;padding:14px 18px;border-left:4px solid #0057b8"><span class="badge badge-gray">Read-only</span> <strong style="margin-left:8px">Shared team access</strong><p class="muted" style="margin:6px 0 0">You are viewing${sharedOwners ? ' the team of ' + esc(sharedOwners) : ' a shared team'} in read-only mode. You can review self-assessments, manager evaluations, results and the 9-Box, but you cannot edit, save or submit anything.</p></div>` : '';
     const pendingEval = team.filter(x => teamState.needsLeaderEvaluation(x) && x.readOnly !== true).length;
-    const pendingLeaderSignature = team.filter(x => x.leaderSignaturePending).length;
+    const pendingLeaderSignature = team.filter(x => x.readOnly !== true && x.leaderSignaturePending === true && x.canSignAsLeader === true).length;
     const pendingEmployeeSignature = team.filter(x => x.employeeSignaturePending).length;
-    return `<section class="backend-live-section">${readOnlyBanner}<div class="kpi-grid">${kpi('Employees',team.length)}${kpi('Pending evaluations',pendingEval,pendingEval?'yellow':'gray')}${kpi('Pending manager signature',pendingLeaderSignature,pendingLeaderSignature?'red':'gray')}${kpi('Pending employee signature',pendingEmployeeSignature,pendingEmployeeSignature?'yellow':'gray')}</div><div class="card"><div class="admin-panel-head"><div><span class="admin-section-kicker">TRACKING</span><h2>${soloFirmas?'Pending signatures':soloPendientes?'Pending evaluations':'My team'}</h2><p>Review your team's progress and the actions that require follow-up.</p></div><div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center"><button class="btn btn-outline btn-sm" onclick="App.recargarBackend()">Refresh</button></div></div><div class="admin-table-wrap"><table class="table"><thead><tr><th>Name</th><th>Position</th><th>Area</th><th>Self-assessment</th><th>Manager evaluation</th><th>Process</th><th>Feedback</th><th>Signature</th><th></th></tr></thead><tbody>${team.map(x=>{const evaluationId=teamState.evaluationId(x);const roRow=x.readOnly===true||sharedAccess;const canEvaluate=!roRow&&teamState.needsLeaderEvaluation(x);const leaderDone=teamState.leaderDone(x);return `<tr><td><div class="backend-person-cell"><strong>${esc(x.name||x.employeeName||x.employeeId)}</strong><small>${esc(x.employeeId||'')}</small></div></td><td>${esc(x.position||'—')}</td><td>${esc(x.area||'—')}</td><td>${badge(teamState.valueOf(teamState.selfStatus(x))||'—')}</td><td>${badge(teamState.valueOf(teamState.leaderStatus(x))||'—')}</td><td>${badge(teamState.valueOf(x.processState)||'—')}</td><td>${badge(feedbackStateLabel(x.feedbackState))}</td><td>${x.leaderSignaturePending?badge('Manager pending','red'):x.employeeSignaturePending?badge('Employee pending','yellow'):'—'}</td><td>${roRow?'<span class="badge badge-gray">Read-only</span>':canEvaluate?`<button class="btn btn-primary btn-sm" onclick="App.abrirEvaluacionLider('${esc(x.employeeId)}','${esc(evaluationId)}')">Evaluate</button>`:leaderTeamActionHtml(x,evaluationId,leaderDone&&evaluationId?`<button class="btn btn-outline btn-sm" onclick="App.abrirComparacionLider('${esc(x.employeeId)}','${esc(evaluationId)}')">View progress</button>`:'<span class="muted">Awaiting self-assessment</span>')}</td></tr>`}).join('')||`<tr><td colspan="9" class="muted">No agreements ready for signature. Newly released feedback first appears in My team as Meeting pending; after the meeting is confirmed and the agreements are released, it moves to this view.</td></tr>`}</tbody></table></div><p class="backend-read-note">Information is updated as each stage of the process progresses.</p></div>${!soloFirmas&&!soloPendientes?'<section class="card" style="margin-top:20px;padding:0;overflow:hidden"><iframe title="My Team · Team Insights and 9-Box" src="team-calibration-live.html?v=20261102-embedded-v1" loading="lazy" style="display:block;width:100%;height:1080px;border:0;background:#f4f7fa" referrerpolicy="same-origin"></iframe></section>':''}</section>`;
+    return `<section class="backend-live-section">${readOnlyBanner}<div class="kpi-grid">${kpi('Employees',team.length)}${kpi('Pending evaluations',pendingEval,pendingEval?'yellow':'gray')}${kpi('Pending manager signature',pendingLeaderSignature,pendingLeaderSignature?'red':'gray')}${kpi('Pending employee signature',pendingEmployeeSignature,pendingEmployeeSignature?'yellow':'gray')}</div><div class="card"><div class="admin-panel-head"><div><span class="admin-section-kicker">TRACKING</span><h2>${soloFirmas?'Pending signatures':soloPendientes?'Pending evaluations':'My team'}</h2><p>Review your team's progress and the actions that require follow-up.</p></div><div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center"><button class="btn btn-outline btn-sm" onclick="App.recargarBackend()">Refresh</button></div></div><div class="admin-table-wrap"><table class="table"><thead><tr><th>Name</th><th>Position</th><th>Area</th><th>Self-assessment</th><th>Manager evaluation</th><th>Process</th><th>Feedback</th><th>Signature</th><th></th></tr></thead><tbody>${team.map(x=>{const evaluationId=teamState.evaluationId(x);const roRow=x.readOnly===true||sharedAccess;const canEvaluate=!roRow&&teamState.needsLeaderEvaluation(x);const leaderDone=teamState.leaderDone(x);return `<tr><td><div class="backend-person-cell"><strong>${esc(x.name||x.employeeName||x.employeeId)}</strong><small>${esc(x.employeeId||'')}</small></div></td><td>${esc(x.position||'—')}</td><td>${esc(x.area||'—')}</td><td>${badge(teamState.valueOf(teamState.selfStatus(x))||'—')}</td><td>${badge(teamState.valueOf(teamState.leaderStatus(x))||'—')}</td><td>${badge(teamState.valueOf(x.processState)||'—')}</td><td>${badge(feedbackStateLabel(x.feedbackState))}</td><td>${x.leaderSignaturePending?badge('Manager pending','red'):x.employeeSignaturePending?badge('Employee pending','yellow'):'—'}</td><td>${roRow?'<span class="badge badge-gray">Read-only</span>':canEvaluate?`<button class="btn btn-primary btn-sm" onclick="App.abrirEvaluacionLider('${esc(x.employeeId)}','${esc(evaluationId)}')">Evaluate</button>`:leaderTeamActionHtml(x,evaluationId,leaderDone&&evaluationId?`<button class="btn btn-outline btn-sm" onclick="App.abrirComparacionLider('${esc(x.employeeId)}','${esc(evaluationId)}')">View progress</button>`:'<span class="muted">Awaiting self-assessment</span>')}</td></tr>`}).join('')||`<tr><td colspan="9" class="muted">${soloFirmas?'No agreements are pending your signature. After the meeting is confirmed and the agreements are released, they appear here.':soloPendientes?'You have no pending evaluations at this time.':'No active direct reports are assigned to you for this period.'}</td></tr>`}</tbody></table></div><p class="backend-read-note">Information is updated as each stage of the process progresses.</p></div>${!soloFirmas&&!soloPendientes?'<section class="card" style="margin-top:20px;padding:0;overflow:hidden"><iframe title="My Team · Team Insights and 9-Box" src="team-calibration-live.html?v=20261125-hierarchy-v1" loading="lazy" style="display:block;width:100%;height:1080px;border:0;background:#f4f7fa" referrerpolicy="same-origin"></iframe></section>':''}</section>`;
   }
 
   function viewLiderDashboard(lider, periodoId, soloPendientes, soloFirmas) {
@@ -3735,6 +3752,7 @@
 
   const Actions = {
     setLanguage(lang) { setLanguage(lang); },
+    getLeaderTeamData() { return state.remote && state.remote.team; },
     recargarBackend() { if(global.EDDApi&&global.EDDApi.clearReadCache) global.EDDApi.clearReadCache(); state.remote.ready=false; state.remote.error=null; state.remote.detail=null; refreshBackendRead(true); render(); },
     async abrirEvaluacionLider(employeeId, evaluationId) {
       if (state.user && state.user.capabilities && state.user.capabilities.sharedTeamReadOnly === true) { global.alert('This shared team access is read-only.'); return; }
